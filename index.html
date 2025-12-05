@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Machine-NG MX(機械故障資訊)</title>
+    <style>
+        :root {
+            --primary-color: #4CAF50; --bg-color: #f7f9fc; --card-bg: #ffffff;
+            --danger-color: #e53935; --copy-color: #FF9800; --view-color: #212121;
+            --frame-color: #4CAF50; --input-border: #ddd;
+        }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: var(--bg-color); margin: 0; padding: 0;
+            display: flex; justify-content: center; min-height: 100vh;
+        }
+        #login-screen, #status-modal, #settings-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 9999;
+            display: none; align-items: center; justify-content: center;
+        }
+        #login-screen { background: var(--bg-color); }
+        .modal-box {
+            background: white; padding: 25px; border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center; width: 90%; max-width: 450px;
+            max-height: 90vh; overflow-y: auto; 
+        }
+        .login-input {
+            width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; 
+            border-radius: 8px; font-size: 16px; text-align: left; box-sizing: border-box;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-color);
+            border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite;
+            margin: 0 auto 15px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #app-screen { width: 100%; max-width: 500px; padding: 10px; box-sizing: border-box; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .header-btn { 
+            font-size: 24px; cursor: pointer; color: #555; padding: 6px; 
+            border-radius: 50%; transition: background 0.2s; width: 36px; height: 36px; 
+            display: flex; align-items: center; justify-content: center;
+        }
+        .header-title h2 { margin: 0; color: #333; font-size: 1.2rem; line-height: 1.4; }
+        .card { background: var(--card-bg); padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 12px; }
+        .section-title { font-weight: bold; color: #555; margin-bottom: 8px; display: block; font-size: 1rem; }
+        .photo-controls { display: flex; gap: 10px; margin-bottom: 10px; }
+        .btn-half { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; gap: 5px;}
+        .btn-cam { background-color: #FF5722; color: white; } 
+        .btn-gallery { background-color: #FFC107; color: #333; } 
+        #preview-container {
+            max-width: 100%; height: auto; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden;
+            background: #e0e0e0; border-radius: 8px; min-height: 150px; 
+        }
+        .ratio-4-3 { aspect-ratio: 4 / 3; } .ratio-16-9 { aspect-ratio: 16 / 9; } .ratio-9-16 { aspect-ratio: 9 / 16; } .ratio-1-1 { aspect-ratio: 1 / 1; }
+        #preview-container .placeholder { position: absolute; color: #666; font-size: 1.1em; font-weight: bold; text-align: center; }
+        #preview-img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: cover; display: none; }
+        #ratio-display-tag { position: absolute; bottom: 5px; right: 5px; background: rgba(0,0,0,0.6); color: white; padding: 2px 5px; border-radius: 4px; font-size: 0.7rem; z-index: 10; }
+        .input-group { margin-bottom: 8px; display: flex; flex-direction: column; }
+        .input-label { font-weight: bold; font-size: 0.9rem; color: #333; margin-bottom: 4px; }
+        .text-input, textarea, select.text-input { 
+            width: 100%; padding: 10px; border: 1px solid var(--input-border); 
+            border-radius: 6px; font-size: 15px; box-sizing: border-box; font-family: inherit; transition: border-color 0.3s;
+        }
+        textarea { height: 80px; resize: vertical; } 
+        .time-component { display: flex; flex-direction: column; margin-bottom: 8px; }
+        .time-input-row { display: flex; align-items: center; gap: 5px; }
+        .btn-update-time { padding: 10px 12px; border: none; background-color: #00bcd4; color: white; border-radius: 6px; cursor: pointer; font-weight: bold; line-height: 1; }
+        
+        .total-time-input-group { display: flex; gap: 5px; align-items: center; }
+        .total-time-input-group #input-total-time { flex-grow: 1; }
+        .total-time-input-group .btn-calc { padding: 10px; background: #607D8B; color: white; border: none; border-radius: 6px; cursor: pointer; }
+        .total-time-input-group #total-time-unit { width: 75px !important; }
+        
+        .footer-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; padding-bottom: 20px; }
+        .btn-main { 
+            width: 100%; aspect-ratio: 5 / 4; padding: 5px; border: none; border-radius: 8px; 
+            font-size: 19px; font-weight: 700; cursor: pointer; color: white; 
+            transition: background 0.2s, transform 0.1s; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; line-height: 1.2; text-align: center;
+        }
+        .btn-main:active { transform: scale(0.99); }
+        .btn-save { background-color: var(--primary-color); } .btn-copy { background-color: var(--copy-color); }
+        .btn-view { background-color: #03A9F4; } .btn-drive { background-color: #795548; }
+
+        #recent-records-container { margin-top: 20px; padding: 15px; background: var(--card-bg); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        #recent-records-container h4 {
+            margin: 0 0 10px 0; color: var(--view-color); border-bottom: 1px solid #eee; padding-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .record-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 5px; cursor: pointer; border-bottom: 1px dashed #f0f0f0; transition: background-color 0.2s; }
+        .record-item:last-child { border-bottom: none; } .record-item:hover { background-color: #f9f9f9; }
+        .record-item .main-info-group { display: flex; flex-direction: column; gap: 2px; flex-shrink: 0; width: 45%; }
+        .record-item .form-no-display { font-weight: bold; color: var(--copy-color); font-size: 1.1em; }
+        .record-item .stop-time-display { font-weight: bold; color: #333; font-size: 0.9em; }
+        .record-item .details { font-size: 0.85rem; color: #777; text-align: right; line-height: 1.4; width: 55%; }
+        .hidden { display: none !important; }
+        
+        .btn-voice.recording { background-color: var(--danger-color); color: white; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div id="login-screen" style="display: none;">
+        <div class="modal-box">
+            <h3>🔒 Login (登入)</h3>
+            <p style="color:#666; font-size:0.9em;">Default Password: 12345<br>(請輸入密碼)</p>
+            <input type="password" id="loginPass" class="login-input" placeholder="Password">
+            <button class="btn-main btn-save" onclick="checkLogin()">Login (進入)</button>
+        </div>
+    </div>
+    <div id="status-modal" style="display: none;">
+        <div class="modal-box">
+            <div id="status-spinner" class="spinner"></div>
+            <div id="status-icon" class="status-icon" style="display:none; font-size: 40px;"></div>
+            <h3 id="status-text" style="color:#333; margin:0;">Uploading...</h3>
+            <p id="status-subtext" style="color:#666; font-size:0.9em; margin-top:5px;">(資料上傳中...)</p>
+            <button id="status-close-btn" onclick="closeStatusModal()" class="btn-main btn-view" style="margin-top: 15px; display: none;">OK</button>
+        </div>
+    </div>
+    <div id="settings-modal" style="display: none;">
+        <div class="modal-box">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                <h3>Settings (設定)</h3>
+                <button onclick="closeSettings()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            <div class="settings-content-group">
+                <div class="modal-group" style="background: #f9f9f9; padding: 10px; border-radius: 8px; border: 1px dashed #ccc;">
+                    <label style="color:#d63384; font-weight: bold; margin-bottom: 5px; display: block;">🔑 Login Password</label>
+                    <input type="text" id="set-password" class="login-input" style="margin: 0;" placeholder="Current: 12345">
+                </div>
+                <div class="modal-group">
+                    <label style="font-weight: bold; margin-bottom: 5px; display: block;">1. Voice Timeout (秒)</label>
+                    <input type="number" id="set-timeout" class="login-input" style="margin: 0;" placeholder="Default: 1.5">
+                </div>
+                <div class="modal-group">
+                    <label style="font-weight: bold; margin-bottom: 5px; display: block;">2. Photo Ratio</label>
+                    <select id="set-ratio" class="login-input" style="margin: 0;">
+                        <option value="4/3">4:3</option><option value="16/9">16:9</option><option value="9/16">9:16</option><option value="1/1">1:1</option>
+                    </select>
+                </div>
+                
+                <div class="modal-group">
+                    <label style="font-weight: bold; margin-bottom: 5px; display: block;">3. Recent Records Limit (顯示筆數)</label>
+                    <input type="number" id="set-recent-limit" class="login-input" style="margin: 0;" placeholder="Default: 5" min="1" max="30">
+                </div>
+
+                <div class="modal-group">
+                    <label style="font-weight: bold; margin-bottom: 5px; display: block;">4. Voice Language</label>
+                    <select id="set-lang" class="login-input" style="margin: 0;" onchange="syncLanguage()">
+                        <option value="cmn-Hant-TW">Chinese (TW)</option><option value="en-US">English</option><option value="ja-JP">Japanese</option><option value="hi-IN">Hindi</option>
+                    </select>
+                </div>
+                <div class="modal-group" style="border: 1px solid #ddd; padding: 10px; border-radius: 8px;">
+                    <label style="font-weight: bold; margin-bottom: 10px; display: block;">5. Concern Section List</label>
+                    <input type="text" id="new-concern-section" class="login-input" style="margin: 0 0 5px 0;" placeholder="Add section">
+                    <button type="button" class="btn-add-item" onclick="addConcernSection()">+ Add</button>
+                    <div id="concern-section-list-container"></div>
+                </div>
+                <div class="modal-group" style="border: 1px solid #ddd; padding: 10px; border-radius: 8px;">
+                    <label style="font-weight: bold; margin-bottom: 10px; display: block;">6. Machine List</label>
+                    <input type="text" id="new-machine-name" class="login-input" style="margin: 0 0 5px 0;" placeholder="Add machine">
+                    <button type="button" class="btn-add-item" onclick="addMachine()">+ Add</button>
+                    <div id="machine-list-container"></div>
+                </div>
+            </div>
+            <button class="btn-main btn-save" onclick="saveSettings()" style="margin-top:15px;">Save Settings</button>
+        </div>
+    </div>
+
+    <div id="app-screen" style="display: none;">
+        <div class="author-header">Author: DERER LIN (v4.7 - Fix Voice Duplication)</div>
+        <div class="header">
+            <div class="header-btn" onclick="logout()" title="Logout">🔒</div>
+            <div class="header-title"><h2>Machine-NG MX<br>混練機械故障資訊</h2></div>
+            <div class="header-btn" onclick="openSettings()" title="Settings">⚙️</div>
+        </div>
+        <div class="input-group">
+            <label class="input-label">Employee ID:</label>
+            <input type="text" id="input-employee-id" class="text-input" placeholder="儲存後不會清除">
+        </div>
+        <div class="card">
+            <span class="section-title">1. Photo</span>
+            <div class="photo-controls">
+                <button class="btn-half btn-cam" onclick="triggerFile('input-cam')">📷 Camera</button>
+                <button class="btn-half btn-gallery" onclick="triggerFile('input-gallery')">🖼️ Gallery</button>
+            </div>
+            <div id="preview-container" class="ratio-4-3" onclick="triggerFile('input-cam')">
+                <div class="ratio-tag" id="ratio-display-tag">Ratio: 4:3</div>
+                <span class="placeholder">Tap here to Take Photo</span>
+                <img id="preview-img">
+            </div>
+            <input type="file" id="input-cam" accept="image/*" capture="environment" class="hidden" onchange="handleFile(this)">
+            <input type="file" id="input-gallery" accept="image/*" class="hidden" onchange="handleFile(this)">
+        </div>
+        <div class="card" id="info-card">
+            <span class="section-title">2. Machine NG Information</span>
+            
+            <div class="input-group">
+                <label class="input-label" style="color: #FF5722;">🗣️ Voice Language (語音語言):</label>
+                <select id="voice-lang-select" class="text-input" onchange="syncLanguageToSettings(this)">
+                    <option value="cmn-Hant-TW">Chinese (TW) - 繁體中文</option>
+                    <option value="en-US">English - 英文</option>
+                    <option value="ja-JP">Japanese - 日文</option>
+                    <option value="hi-IN">Hindi - 印地語</option>
+                </select>
+            </div>
+
+            <div class="input-group"><label class="input-label">Machine :</label><select id="input-machine" class="text-input"></select></div>
+            <div class="input-group"><label class="input-label">Repair Form No:</label><input type="text" id="input-form-no" class="text-input" placeholder="e.g. A69304"></div>
+            <div class="time-component">
+                <label class="input-label">Stop time : (DD/MM/YYYY hh:mm) (IST)</label>
+                <div class="time-input-row">
+                    <input type="text" id="input-stop-time-full" class="text-input" placeholder="請點右側按鈕或手動輸入" oninput="calculateTotalStopTime()">
+                    <button type="button" class="btn-update-time" onclick="updateSingleTime('input-stop-time-full')"><span style="font-size: 1.1em;">⏱️</span></button>
+                </div>
+            </div>
+            <div class="time-component">
+                <label class="input-label">Start time : (DD/MM/YYYY hh:mm) (IST)</label>
+                <div class="time-input-row">
+                    <input type="text" id="input-start-time-full" class="text-input" placeholder="請點右側按鈕或手動輸入" oninput="calculateTotalStopTime()">
+                    <button type="button" class="btn-update-time" onclick="updateSingleTime('input-start-time-full')"><span style="font-size: 1.1em;">⏱️</span></button>
+                </div>
+            </div>
+            <div class="input-group">
+                <label class="input-label">Total stop time :</label>
+                <div class="total-time-input-group">
+                    <input type="text" id="input-total-time" class="text-input" readonly style="background-color: #eee; font-weight: bold;">
+                    <button type="button" class="btn-calc" onclick="calculateTotalStopTime()" title="Recalculate">🔄</button>
+                    <select id="total-time-unit" onchange="calculateTotalStopTime()" class="text-input"><option value="min" selected>min</option><option value="h">hr</option></select>
+                </div>
+            </div>
+            <div class="input-group"><label class="input-label">Concern Section :</label><select id="input-concern-section" class="text-input"></select></div>
+            <div class="input-group">
+                <label class="input-label">Reason :</label><textarea id="input-reason"></textarea>
+                <div class="voice-control-group"><button type="button" class="btn-voice" data-target="input-reason" onclick="toggleVoice(this)">🎤 語音輸入</button></div>
+            </div>
+            <div class="input-group">
+                <label class="input-label">How to Solve Problem:</label><textarea id="input-solution"></textarea>
+                <div class="voice-control-group"><button type="button" class="btn-voice" data-target="input-solution" onclick="toggleVoice(this)">🎤 語音輸入</button></div>
+            </div>
+            <div class="input-group">
+                <label class="input-label">Self Actions:</label><textarea id="input-self-actions"></textarea>
+                <div class="voice-control-group"><button type="button" class="btn-voice" data-target="input-self-actions" onclick="toggleVoice(this)">🎤 語音輸入</button></div>
+            </div>
+        </div>
+
+        <div id="recent-records-container" class="card">
+            <h4>最近紀錄 (Recent Records)</h4> <div id="recent-records-list"><p style="text-align: center; color: #999;">Loading recent records...</p></div>
+        </div>
+        
+        <div class="footer-btns">
+            <button class="btn-main btn-copy" onclick="copyFormattedInfo()">📋<br>Copy Info</button>
+            <button class="btn-main btn-save" id="saveBtn" onclick="saveToCloud()">💾<br>Save to Cloud</button>
+            <button class="btn-main btn-view" onclick="viewExcel()">📊<br>View Excel</button>
+            <button class="btn-main btn-drive" onclick="viewDriveFolder()">📂<br>View Photos</button>
+        </div>
+    </div>
+
+<script>
+    const DEFAULT_PASS = "12345"; const MAX_IMAGE_WIDTH = 1000;
+    const MACHINE_LIST_KEY = "cfg_machine_list"; const CONCERN_LIST_KEY = "cfg_concern_list"; const EMPLOYEE_ID_KEY = "cfg_employee_id";
+    const DEFAULT_MACHINE_LIST = ["BM5", "BM6", "BM7", "BM21", "BM22", "BM23", "CA3", "CA4", "CM1", "CM2", "CM3"];
+    const DEFAULT_CONCERN_LIST = ["Mixing", "Extrusion", "Cutting", "Calendering"];
+    const DEFAULT_VOICE_TIMEOUT = 1.5;
+    const DEFAULT_RECENT_LIMIT = 5;
+
+    // TODO: ⚠️ 請務必將下方三個 ID 替換為您自己的資料 ⚠️
+    const FIXED_SCRIPT_ID = "AKfycbzp-_znHVKlhtZIN7YIB_CYfVYwMOjuw3BsKpnVu-q6tdYeMKKq3DHylBiDQF0XuYHTVw/exec"; 
+    const FIXED_SHEET_ID = "1mXXJRB2N4AFzYQMPM10iLY2Ufj6HgrpyBes_LaMizaE/edit?gid=0#gid=0"; 
+    const FIXED_FOLDER_ID = "17zTIDgQcYwjKCbRZKeamKFqGJk4Ya69Z"; 
+    
+    const GAS_URL = `https://script.google.com/macros/s/${FIXED_SCRIPT_ID}/exec`;
+
+    // 修正語音變數
+    let processedImageBase64 = "", recognition = null, isRecording = false, activeTextAreaId = null;
+    let initialText = "", currentSessionFinal = "", punctuationTimer = null; // 修正邏輯用的變數
+
+    document.addEventListener('DOMContentLoaded', () => { initApp(); });
+
+    function initApp() {
+        if(!localStorage.getItem("app_password")) localStorage.setItem("app_password", DEFAULT_PASS);
+        if(!localStorage.getItem(MACHINE_LIST_KEY)) localStorage.setItem(MACHINE_LIST_KEY, JSON.stringify(DEFAULT_MACHINE_LIST));
+        if(!localStorage.getItem(CONCERN_LIST_KEY)) localStorage.setItem(CONCERN_LIST_KEY, JSON.stringify(DEFAULT_CONCERN_LIST));
+        if(!localStorage.getItem("cfg_timeout")) localStorage.setItem("cfg_timeout", DEFAULT_VOICE_TIMEOUT);
+        if(!localStorage.getItem("cfg_recent_limit")) localStorage.setItem("cfg_recent_limit", DEFAULT_RECENT_LIMIT);
+        
+        loadSettingsToUI(); loadMachineListToUI(); loadConcernSectionToUI(); loadEmployeeID(); 
+        
+        document.getElementById('input-stop-time-full').value = ""; document.getElementById('input-start-time-full').value = "";
+        document.getElementById('input-total-time').value = ""; document.getElementById('input-total-time').style.backgroundColor = '#eee';
+        document.getElementById('total-time-unit').value = "min"; 
+        
+        const isLoggedIn = localStorage.getItem("isLoggedIn");
+        if(isLoggedIn === "true") {
+            document.getElementById('app-screen').style.display = 'block'; document.getElementById('login-screen').style.display = 'none';
+            applySettings(); loadRecentRecords();
+        } else {
+            document.getElementById('app-screen').style.display = 'none'; document.getElementById('login-screen').style.display = 'flex';
+        }
+    }
+
+    function checkLogin(){const i=document.getElementById('loginPass').value;if(i===localStorage.getItem("app_password")){localStorage.setItem("isLoggedIn","true");document.getElementById('login-screen').style.display='none';document.getElementById('app-screen').style.display='block';applySettings();loadRecentRecords()}else{alert("Password incorrect.")}}
+    function logout(){if(confirm("Logout?")){localStorage.removeItem("isLoggedIn");document.getElementById('app-screen').style.display='none';document.getElementById('login-screen').style.display='flex';document.getElementById('loginPass').value=''}}
+    function openSettings(){document.getElementById('settings-modal').style.display='flex';renderConcernListSettings();renderMachineListSettings();document.getElementById('set-password').value=''}
+    function closeSettings(){document.getElementById('settings-modal').style.display='none'}
+    function saveSettings(){
+        const p=document.getElementById('set-password').value.trim();if(p)localStorage.setItem("app_password",p);
+        const t=parseFloat(document.getElementById('set-timeout').value);if(!isNaN(t))localStorage.setItem("cfg_timeout",t);
+        const limit = parseInt(document.getElementById('set-recent-limit').value);
+        if(!isNaN(limit) && limit > 0) localStorage.setItem("cfg_recent_limit", limit);
+
+        localStorage.setItem("cfg_ratio",document.getElementById('set-ratio').value);
+        localStorage.setItem("cfg_lang",document.getElementById('set-lang').value);
+        alert("Saved!");closeSettings();applySettings();
+        loadRecentRecords();
+    }
+    function loadSettingsToUI(){
+        document.getElementById('set-timeout').value=localStorage.getItem("cfg_timeout")||DEFAULT_VOICE_TIMEOUT;
+        document.getElementById('set-ratio').value=localStorage.getItem("cfg_ratio")||'4/3';
+        document.getElementById('set-lang').value=localStorage.getItem("cfg_lang")||'cmn-Hant-TW';
+        document.getElementById('set-recent-limit').value = localStorage.getItem("cfg_recent_limit") || DEFAULT_RECENT_LIMIT;
+    }
+    
+    function applySettings(){
+        const r=localStorage.getItem("cfg_ratio")||'4/3';const c=document.getElementById('preview-container');c.className='';c.classList.add(r==='4/3'?'ratio-4-3':r==='16/9'?'ratio-16-9':r==='9/16'?'ratio-9-16':'ratio-1-1');document.getElementById('ratio-display-tag').innerText=`Ratio: ${r.replace('/',':')}`;
+        const l = localStorage.getItem("cfg_lang")||'cmn-Hant-TW';
+        document.getElementById('voice-lang-select').value = l;
+        document.getElementById('set-lang').value = l;
+    }
+    function syncLanguage(){localStorage.setItem("cfg_lang",document.getElementById('set-lang').value);document.getElementById('voice-lang-select').value=document.getElementById('set-lang').value}
+    function syncLanguageToSettings(el){localStorage.setItem("cfg_lang",el.value);document.getElementById('set-lang').value=el.value}
+
+    function getMachineList(){try{return JSON.parse(localStorage.getItem(MACHINE_LIST_KEY))||DEFAULT_MACHINE_LIST}catch(e){return DEFAULT_MACHINE_LIST}}
+    function saveMachineList(l){localStorage.setItem(MACHINE_LIST_KEY,JSON.stringify(l));loadMachineListToUI();renderMachineListSettings()}
+    function loadMachineListToUI(){const s=document.getElementById('input-machine');s.innerHTML='<option value="">-- Select --</option>';getMachineList().forEach(i=>{const o=document.createElement('option');o.value=i;o.innerText=i;s.appendChild(o)})}
+    function renderMachineListSettings(){const c=document.getElementById('machine-list-container');c.innerHTML='';getMachineList().forEach(i=>{const d=document.createElement('div');d.innerHTML=`<span>${i}</span><button onclick="removeMachine('${i}')" style="background:var(--danger-color);color:white;border:none;padding:2px 5px;">X</button>`;d.style.cssText="display:flex;justify-content:space-between;margin:5px 0;";c.appendChild(d)})}
+    function addMachine(){const v=document.getElementById('new-machine-name').value.trim().toUpperCase();if(v){let l=getMachineList();if(!l.includes(v)){l.push(v);saveMachineList(l.sort())}document.getElementById('new-machine-name').value=''}}
+    function removeMachine(v){if(confirm(`Remove ${v}?`)){let l=getMachineList().filter(i=>i!==v);saveMachineList(l)}}
+    function getConcernList(){try{return JSON.parse(localStorage.getItem(CONCERN_LIST_KEY))||DEFAULT_CONCERN_LIST}catch(e){return DEFAULT_CONCERN_LIST}}
+    function saveConcernList(l){localStorage.setItem(CONCERN_LIST_KEY,JSON.stringify(l));loadConcernSectionToUI();renderConcernListSettings()}
+    function loadConcernSectionToUI(){const s=document.getElementById('input-concern-section');s.innerHTML='<option value="">-- Select --</option>';getConcernList().forEach(i=>{const o=document.createElement('option');o.value=i;o.innerText=i;s.appendChild(o)})}
+    function renderConcernListSettings(){const c=document.getElementById('concern-section-list-container');c.innerHTML='';getConcernList().forEach(i=>{const d=document.createElement('div');d.innerHTML=`<span>${i}</span><button onclick="removeConcernSection('${i}')" style="background:var(--danger-color);color:white;border:none;padding:2px 5px;">X</button>`;d.style.cssText="display:flex;justify-content:space-between;margin:5px 0;";c.appendChild(d)})}
+    function addConcernSection(){const v=document.getElementById('new-concern-section').value.trim();if(v){let l=getConcernList();if(!l.includes(v)){l.push(v);saveConcernList(l.sort())}document.getElementById('new-concern-section').value=''}}
+    function removeConcernSection(v){if(confirm(`Remove ${v}?`)){let l=getConcernList().filter(i=>i!==v);saveConcernList(l)}}
+    function loadEmployeeID(){const v=localStorage.getItem(EMPLOYEE_ID_KEY);if(v)document.getElementById('input-employee-id').value=v}
+    function saveEmployeeID(){const v=document.getElementById('input-employee-id').value.trim();if(v)localStorage.setItem(EMPLOYEE_ID_KEY,v)}
+    
+    const DATETIME_REGEX = /^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})$/;
+    function parseCustomDateTime(dtStr) {
+        if(!dtStr) return null;
+        const s = dtStr.trim(); 
+        const match = s.match(DATETIME_REGEX);
+        if (!match) return null;
+        const day = parseInt(match[1], 10);
+        const month = parseInt(match[2], 10) - 1; 
+        const year = parseInt(match[3], 10);
+        const hour = parseInt(match[4], 10);
+        const minute = parseInt(match[5], 10);
+        const date = new Date(year, month, day, hour, minute);
+        if (date.getFullYear() !== year || date.getMonth() !== month || date.getDate() !== day) return null;
+        return date;
+    }
+    
+    function calculateTotalStopTime() {
+        const s1 = document.getElementById('input-stop-time-full').value;
+        const s2 = document.getElementById('input-start-time-full').value;
+        const t = document.getElementById('input-total-time');
+        const u = document.getElementById('total-time-unit').value;
+        if(!s1||!s2){ t.value=""; t.style.background='#eee'; return; }
+        const d1 = parseCustomDateTime(s1);
+        const d2 = parseCustomDateTime(s2);
+        if(!d1||!d2){ t.value="Invalid Format"; t.style.background='#fdd'; return; }
+        const diff = Math.round((d2 - d1) / 60000);
+        if(diff <= 0){ t.value="0 (Check Time)"; t.style.background='#fdd'; return; }
+        t.value = u === 'h' ? (diff/60).toFixed(2) + " hr" : diff + " min";
+        t.style.background='#e6ffed';
+    }
+    
+    function getFullDateTimeString(dateObj) {
+        const utc = dateObj.getTime() + (dateObj.getTimezoneOffset() * 60000);
+        const istDate = new Date(utc + (3600000 * 5.5));
+        const day = String(istDate.getDate()).padStart(2, '0');
+        const month = String(istDate.getMonth() + 1).padStart(2, '0');
+        const year = istDate.getFullYear();
+        const hour = String(istDate.getHours()).padStart(2, '0');
+        const minute = String(istDate.getMinutes()).padStart(2, '0');
+        return `${day}/${month}/${year} ${hour}:${minute}`;
+    }
+    function updateSingleTime(id){const n=new Date();document.getElementById(id).value=getFullDateTimeString(n);calculateTotalStopTime()}
+    
+    function loadRecentRecords(){
+        const listContainer=document.getElementById('recent-records-list');listContainer.innerHTML='<p style="text-align: center; color: #999;">Loading...</p>';
+        const limit = parseInt(localStorage.getItem("cfg_recent_limit")) || DEFAULT_RECENT_LIMIT;
+
+        fetch(`${GAS_URL}?action=loadRecords`).then(r=>r.json()).then(res=>{
+            listContainer.innerHTML='';
+            if(res.result==='success'&&res.data.length>0){
+                const recordsToShow = res.data.slice(0, limit);
+                recordsToShow.forEach(r=>{
+                    const i=document.createElement('div');i.className='record-item';i.setAttribute('onclick',`populateForm('${r.formNo}')`);
+                    i.innerHTML=`<div class="main-info-group"><span class="form-no-display">#${r.formNo||'N/A'}</span><span class="stop-time-display">🛑 ${r.stopTime||"No Stop Time"}</span></div><div class="details"><div>${r.machine||'N/A'} (${r.concernSection||'N/A'})</div><div>${r.startTime?'Start: '+r.startTime:''}</div></div>`;
+                    listContainer.appendChild(i)
+                })
+            }else{listContainer.innerHTML='<p style="text-align: center; color: #999;">無最近紀錄。</p>'}
+        }).catch(e=>{listContainer.innerHTML='<p style="text-align: center; color: red;">❌ 載入失敗。</p>'})
+    }
+
+    function populateForm(f){
+        if(!confirm(`回填單號 [${f}]?`))return;showStatus('loading','Loading...',f);
+        fetch(`${GAS_URL}?action=getRow&formNo=${encodeURIComponent(f)}`).then(r=>r.json()).then(res=>{
+            if(res.result==='success'){
+                const d=res.data;processedImageBase64="";document.getElementById('preview-img').style.display='none';document.querySelector('.placeholder').style.display='block';
+                document.getElementById('input-employee-id').value=d.employeeId;document.getElementById('input-machine').value=d.machine;
+                document.getElementById('input-form-no').value=d.formNo;document.getElementById('input-stop-time-full').value=d.stopTimeFull?d.stopTimeFull.trim():"";
+                document.getElementById('input-start-time-full').value=d.startTimeFull?d.startTimeFull.trim():"";document.getElementById('input-concern-section').value=d.concernSection;
+                document.getElementById('input-reason').value=d.reason;document.getElementById('input-solution').value=d.solution;document.getElementById('input-self-actions').value=d.selfActions;
+                calculateTotalStopTime();showStatus('success','Loaded','');setTimeout(closeStatusModal,1000)
+            }else{showStatus('error','Failed',res.error)}
+        }).catch(e=>showStatus('error','Error','Network'))
+    }
+    function triggerFile(id){document.getElementById(id).click()}
+    function handleFile(i){if(i.files[0]){showStatus('loading','Processing...','');const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>processImageWithCanvas(img);img.src=e.target.result};r.readAsDataURL(i.files[0])}}
+    function processImageWithCanvas(img){const c=document.createElement('canvas');let w=img.width;let h=img.height;if(w>MAX_IMAGE_WIDTH){h=Math.round(h*(MAX_IMAGE_WIDTH/w));w=MAX_IMAGE_WIDTH}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);processedImageBase64=c.toDataURL('image/jpeg',0.8);document.getElementById('preview-img').src=processedImageBase64;document.getElementById('preview-img').style.display='block';document.querySelector('.placeholder').style.display='none';closeStatusModal()}
+    
+    function toggleVoice(button) {
+        if (!('webkitSpeechRecognition' in window)) { alert("請使用 Chrome 瀏覽器"); return; }
+        if (isRecording) { manualStopVoice(); } else { activeTextAreaId = button.dataset.target; startVoice(button); }
+    }
+
+    // ✅ 已修正：語音輸入不再重複
+    function startVoice(button) {
+        isRecording = true; button.classList.add('recording'); button.innerHTML = '🔴 錄音中...';
+        recognition = new webkitSpeechRecognition(); recognition.continuous = true; recognition.interimResults = true;
+        recognition.lang = document.getElementById('voice-lang-select').value; 
+        
+        const targetElement = document.getElementById(activeTextAreaId);
+        
+        // 鎖定初始文字 (Snaphot)
+        initialText = targetElement.value; 
+        if (initialText.length > 0 && !initialText.endsWith(' ') && !initialText.endsWith('\n')) {
+            initialText += ' ';
+        }
+        currentSessionFinal = ''; // 清空本次對話紀錄
+
+        recognition.onstart = function() { clearTimeout(punctuationTimer); };
+
+        recognition.onresult = function(event) {
+            clearTimeout(punctuationTimer); 
+            let interimTranscript = '';
+            
+            // 重新計算本次所有的 finalized 文字 (這樣才不會重複疊加)
+            currentSessionFinal = ''; 
+
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) { 
+                    currentSessionFinal += event.results[i][0].transcript; 
+                } else { 
+                    interimTranscript += event.results[i][0].transcript; 
+                }
+            }
+            
+            // 介面永遠顯示：【初始文字】 + 【這次講完的】 + 【正在講的】
+            targetElement.value = initialText + currentSessionFinal + interimTranscript;
+            
+            const timeout = parseFloat(localStorage.getItem("cfg_timeout") || DEFAULT_VOICE_TIMEOUT) * 1000;
+            punctuationTimer = setTimeout(manualStopVoice, timeout);
+        };
+
+        recognition.onerror = function(event) {
+            console.error('Error:', event.error);
+            if(event.error === 'no-speech') { }
+            else { resetVoiceUI(); alert('語音錯誤: ' + event.error); }
+        };
+
+        recognition.onend = function() {
+            if (isRecording) {
+                try { 
+                    // 重新開始時，更新初始文字 (把剛講完的變成初始文字)
+                    const el = document.getElementById(activeTextAreaId);
+                    if(el) {
+                        initialText = el.value;
+                        if (initialText.length > 0 && !initialText.endsWith(' ') && !initialText.endsWith('\n')) { initialText += ' '; }
+                    }
+                    currentSessionFinal = '';
+                    recognition.start(); 
+                } catch(e) { console.warn("Restart failed"); }
+            } else {
+                resetVoiceUI();
+            }
+        };
+
+        try { recognition.start(); } catch(e) { console.warn("Start failed"); }
+    }
+
+    function manualStopVoice() {
+        isRecording = false; 
+        if (recognition) { 
+            clearTimeout(punctuationTimer); 
+            recognition.stop(); 
+        }
+        resetVoiceUI();
+    }
+
+    function resetVoiceUI() {
+        isRecording = false; document.querySelectorAll('.btn-voice').forEach(b=>{b.classList.remove('recording');b.innerText='🎤 語音輸入'}); activeTextAreaId = null;
+    }
+
+    function showStatus(t,h,s){const m=document.getElementById('status-modal');document.getElementById('status-text').innerText=h;document.getElementById('status-subtext').innerText=s;document.getElementById('status-spinner').style.display=t==='loading'?'block':'none';document.getElementById('status-icon').style.display=t!=='loading'?'block':'none';document.getElementById('status-close-btn').style.display=t!=='loading'?'block':'none';document.getElementById('status-icon').innerText=t==='success'?'✅':'❌';m.style.display='flex'}
+    function closeStatusModal(){document.getElementById('status-modal').style.display='none'}
+    
+    function copyFormattedInfo(){
+        const emp = document.getElementById('input-employee-id').value || "N/A";
+        const machine = document.getElementById('input-machine').value || "N/A";
+        const form = document.getElementById('input-form-no').value || "N/A";
+        const stop = document.getElementById('input-stop-time-full').value || "";
+        const start = document.getElementById('input-start-time-full').value || "";
+        const total = document.getElementById('input-total-time').value || "";
+        const concern = document.getElementById('input-concern-section').value || "N/A";
+        const reason = document.getElementById('input-reason').value || "N/A";
+        const solution = document.getElementById('input-solution').value || "N/A";
+        const action = document.getElementById('input-self-actions').value || "N/A";
+
+        if (machine === "N/A" && form === "N/A") {
+            alert("請至少填寫 Machine 與 Form No");
+            return;
+        }
+
+        const textToCopy = 
+`[Machine NG Record]
+
+Employee: ${emp}
+
+Machine: ${machine}
+
+Form No: ${form}
+
+-----------------------
+Stop Time: ${stop}
+
+Start Time: ${start}
+
+Total Time: ${total}
+
+-----------------------
+Concern: ${concern}
+
+Reason: 
+${reason}
+
+Solution: 
+${solution}
+
+Self Actions: 
+${action}`;
+
+        navigator.clipboard.writeText(textToCopy.trim())
+            .then(() => alert("Copied!"))
+            .catch(err => alert("Copy failed: " + err));
+    }
+
+    function viewExcel(){window.open(`https://docs.google.com/spreadsheets/d/${FIXED_SHEET_ID}/edit`,'_blank')}
+    function viewDriveFolder(){window.open(`https://drive.google.com/drive/folders/${FIXED_FOLDER_ID}`,'_blank')}
+    function clearInputs(){
+        document.getElementById('input-machine').value="";document.getElementById('input-form-no').value="";document.getElementById('input-stop-time-full').value="";document.getElementById('input-start-time-full').value="";document.getElementById('input-total-time').value="";document.getElementById('input-reason').value="";document.getElementById('input-solution').value="";document.getElementById('input-self-actions').value="";processedImageBase64="";document.getElementById('preview-img').style.display='none';document.querySelector('.placeholder').style.display='block';calculateTotalStopTime();
+    }
+    function saveToCloud(){
+        if(isRecording)manualStopVoice();
+        const d={image:processedImageBase64,employeeId:document.getElementById('input-employee-id').value,machine:document.getElementById('input-machine').value,stopTimeFull:document.getElementById('input-stop-time-full').value,startTimeFull:document.getElementById('input-start-time-full').value,formNo:document.getElementById('input-form-no').value,reason:document.getElementById('input-reason').value,concernSection:document.getElementById('input-concern-section').value,solution:document.getElementById('input-solution').value,selfActions:document.getElementById('input-self-actions').value,folderId:FIXED_FOLDER_ID};
+        if(!d.formNo){alert("Form No required");return}
+        saveEmployeeID();showStatus('loading','Uploading...','');
+        fetch(GAS_URL,{method:'POST',body:JSON.stringify(d)}).then(r=>r.json()).then(res=>{if(res.result==='success'){showStatus('success','Saved!',res.action);clearInputs();loadRecentRecords();setTimeout(closeStatusModal,2000)}else{showStatus('error','Failed',res.error)}}).catch(e=>showStatus('error','Error',e.message)).finally(()=>document.getElementById('saveBtn').disabled=false);
+    }
+</script>
+</body>
+</html>
+
+
