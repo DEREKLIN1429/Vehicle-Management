@@ -161,7 +161,7 @@
     </div>
 
     <div id="app-screen">
-        <div class="author-header">Author: DEREK LIN (v5.7)</div>
+        <div class="author-header">Author: DEREK LIN (v5.8)</div>
         <div class="header">
             <div style="width: 36px;"></div> 
             <div class="header-title"><h2>Container MM INFO<br>貨櫃管理資訊</h2></div>
@@ -670,13 +670,12 @@ ${notes}`;
         calculateTotalStopTime();
     }
 
-    // 修改：saveToCloud 傳送 shiftNum (班次) 與 truckNum (車牌) 給後端
     function saveToCloud(){
         if(isRecording)manualStopVoice();
         
         let noteContent = document.getElementById('input-self-actions').value;
-        const plateNum = document.getElementById('input-plate-num').value; // 車牌 (Plate No)
-        const shiftNum = document.getElementById('input-truck-num').value; // 班次 (Shift No)
+        const plateNum = document.getElementById('input-plate-num').value; // 車牌
+        const shiftNum = document.getElementById('input-truck-num').value; // 班次
 
         const d={
             image1: processedImages[1],
