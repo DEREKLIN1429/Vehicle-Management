@@ -80,12 +80,20 @@
         .total-time-input-group .btn-calc { padding: 10px; background: #607D8B; color: white; border: none; border-radius: 6px; cursor: pointer; }
         .total-time-input-group #total-time-unit { width: 75px !important; }
         
+        /* 修改：按鈕高度減半，字體加大，避免溢出 */
         .footer-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; padding-bottom: 20px; }
         .btn-main { 
-            width: 100%; aspect-ratio: 5 / 4; padding: 5px; border: none; border-radius: 8px; 
-            font-size: 19px; font-weight: 700; cursor: pointer; color: white; 
-            transition: background 0.2s, transform 0.1s; display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; line-height: 1.2; text-align: center;
+            width: 100%; 
+            height: 65px; /* 固定高度，約為之前的一半 */
+            padding: 5px; border: none; border-radius: 8px; 
+            font-size: 18px; /* 加大字體 */
+            font-weight: 700; cursor: pointer; color: white; 
+            transition: background 0.2s, transform 0.1s; 
+            display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; 
+            line-height: 1.1; text-align: center;
+            white-space: nowrap; /* 不換行 */
+            overflow: hidden;    /* 隱藏溢出 */
         }
         .btn-main:active { transform: scale(0.99); }
         .btn-save { background-color: var(--primary-color); } .btn-copy { background-color: var(--copy-color); }
@@ -161,7 +169,7 @@
     </div>
 
     <div id="app-screen">
-        <div class="author-header">Author: DEREK LIN (v5.8)</div>
+        <div class="author-header">Author: DEREK LIN (v5.9)</div>
         <div class="header">
             <div style="width: 36px;"></div> 
             <div class="header-title"><h2>Container MM INFO<br>貨櫃管理資訊</h2></div>
@@ -297,10 +305,10 @@
                 </div>
                 
                 <div class="footer-btns">
-                    <button class="btn-main btn-copy" onclick="copyFormattedInfo()">📋<br>Copy Info</button>
-                    <button class="btn-main btn-save" id="saveBtn" onclick="saveToCloud()">💾<br>Save to Cloud</button>
-                    <button class="btn-main btn-view" onclick="viewExcel()">📊<br>View Excel</button>
-                    <button class="btn-main btn-drive" onclick="viewDriveFolder()">📂<br>View Photos</button>
+                    <button class="btn-main btn-copy" onclick="copyFormattedInfo()">📋 Copy</button>
+                    <button class="btn-main btn-save" id="saveBtn" onclick="saveToCloud()">💾 Save</button>
+                    <button class="btn-main btn-view" onclick="viewExcel()">📊 Excel</button>
+                    <button class="btn-main btn-drive" onclick="viewDriveFolder()">📂 Photos</button>
                 </div>
             </div> 
         </div> 
@@ -448,7 +456,8 @@
                 const recordsToShow = res.data.slice(0, limit);
                 recordsToShow.forEach(r=>{
                     const i=document.createElement('div');i.className='record-item';i.setAttribute('onclick',`populateForm('${r.formNo}')`);
-                    i.innerHTML=`<div class="main-info-group"><span class="form-no-display">#${r.formNo||'N/A'}</span><span class="stop-time-display">🛑 ${r.stopTime||"No Time"}</span></div><div class="details"><div>${r.machine||'N/A'} (${r.concernSection||'N/A'})</div><div>${r.startTime?'Arr: '+r.startTime:''}</div></div>`;
+                    // 列表顯示加入車牌資訊
+                    i.innerHTML=`<div class="main-info-group"><span class="form-no-display">#${r.formNo||'N/A'}</span><span class="stop-time-display">🛑 ${r.stopTime||"No Time"}</span></div><div class="details"><div>${r.machine||'N/A'} - ${r.truckNum||'No Plate'}</div><div>${r.startTime?'Arr: '+r.startTime:''}</div></div>`;
                     listContainer.appendChild(i)
                 })
             }else{listContainer.innerHTML='<p style="text-align: center; color: #999;">無最近紀錄。</p>'}
@@ -478,8 +487,8 @@
                 document.getElementById('input-solution').value=d.solution;
                 document.getElementById('input-self-actions').value=d.selfActions;
                 
-                // 這裡暫時回填 Plate 到 truck-num，因為後端只有一個 truckNo 欄位
-                document.getElementById('input-truck-num').value=d.truckNum || ""; // 回填班次
+                // 修正：回填正確的欄位
+                document.getElementById('input-truck-num').value=d.shiftNum || ""; // 回填班次
                 document.getElementById('input-plate-num').value=d.plateNum || ""; // 回填車牌
 
                 calculateTotalStopTime();
@@ -686,10 +695,7 @@ ${notes}`;
             startTimeFull:document.getElementById('input-start-time-full').value,
             stopTimeFull:document.getElementById('input-stop-time-full').value,
             
-            // 傳送 車牌 (Plate) -> 給後端 truckNum
             truckNum: plateNum, 
-            
-            // 傳送 班次 (Shift) -> 給後端 shiftNum
             shiftNum: shiftNum,
             
             concernSection:document.getElementById('input-concern-section').value,
