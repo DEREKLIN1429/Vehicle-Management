@@ -107,7 +107,6 @@
         .btn-voice.recording { background-color: var(--danger-color); color: white; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
 
-        /* 桌面版雙欄樣式 */
         @media (min-width: 900px) {
             #app-screen { max-width: 1100px; }
             .main-content-wrapper { display: flex; gap: 20px; align-items: flex-start; }
@@ -156,25 +155,13 @@
                         <option value="cmn-Hant-TW">Chinese (TW)</option><option value="en-US">English</option><option value="ja-JP">Japanese</option><option value="hi-IN">Hindi</option>
                     </select>
                 </div>
-                <div class="modal-group" style="display:none;">
-                    <label style="font-weight: bold; margin-bottom: 10px; display: block;">5. Concern Section List</label>
-                    <input type="text" id="new-concern-section" class="login-input" style="margin: 0 0 5px 0;">
-                    <button type="button" class="btn-add-item" onclick="addConcernSection()">+ Add</button>
-                    <div id="concern-section-list-container"></div>
-                </div>
-                <div class="modal-group" style="display:none;">
-                    <label style="font-weight: bold; margin-bottom: 10px; display: block;">6. Machine List</label>
-                    <input type="text" id="new-machine-name" class="login-input" style="margin: 0 0 5px 0;">
-                    <button type="button" class="btn-add-item" onclick="addMachine()">+ Add</button>
-                    <div id="machine-list-container"></div>
-                </div>
             </div>
             <button class="btn-main btn-save" onclick="saveSettings()" style="margin-top:15px;">Save Settings</button>
         </div>
     </div>
 
     <div id="app-screen">
-        <div class="author-header">Author: DEREK LIN (v4.8)</div>
+        <div class="author-header">Author: DEREK LIN (v4.9)</div>
         <div class="header">
             <div style="width: 36px;"></div> 
             <div class="header-title"><h2>Container MM INFO<br>貨櫃管理資訊</h2></div>
@@ -234,24 +221,25 @@
                     </div>
 
                     <div class="input-group">
-                        <label class="input-label">貨櫃車牌 :</label>
-                        <input type="text" id="input-machine" class="text-input" placeholder="輸入車牌號碼">
+                        <label class="input-label">SAP CODE :</label>
+                        <input type="text" id="input-machine" class="text-input" placeholder="輸入 SAP Code">
                     </div>
                     
                     <div class="input-group">
-                        <label class="input-label">原材料名稱 :</label>
+                        <label class="input-label">Material Name :</label>
                         <input type="text" id="input-form-no" class="text-input" placeholder="輸入材料名稱">
                     </div>
                     
                     <div class="time-component">
-                        <label class="input-label">Start time : (DD/MM/YYYY hh:mm) (IST)</label>
+                        <label class="input-label">Arrival Time : (DD/MM/YYYY hh:mm) (IST)</label>
                         <div class="time-input-row">
                             <input type="text" id="input-start-time-full" class="text-input" placeholder="請點右側按鈕或手動輸入" oninput="calculateTotalStopTime()">
                             <button type="button" class="btn-update-time" onclick="updateSingleTime('input-start-time-full')"><span style="font-size: 1.1em;">⏱️</span></button>
                         </div>
                     </div>
+                    
                     <div class="time-component">
-                        <label class="input-label">Stop time : (DD/MM/YYYY hh:mm) (IST)</label>
+                        <label class="input-label">End time : (DD/MM/YYYY hh:mm) (IST)</label>
                         <div class="time-input-row">
                             <input type="text" id="input-stop-time-full" class="text-input" placeholder="請點右側按鈕或手動輸入" oninput="calculateTotalStopTime()">
                             <button type="button" class="btn-update-time" onclick="updateSingleTime('input-stop-time-full')"><span style="font-size: 1.1em;">⏱️</span></button>
@@ -268,7 +256,12 @@
                     </div>
 
                     <div class="input-group">
-                        <label class="input-label">Weight :</label>
+                        <label class="input-label">Number of Truck :</label>
+                        <input type="text" id="input-truck-num" class="text-input" placeholder="輸入車次數量">
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label">Material Inbound Weight :</label>
                         <input type="number" id="input-concern-section" class="text-input" placeholder="Enter Weight" oninput="calculateTotalStock()">
                     </div>
                     
@@ -311,7 +304,6 @@
 <script>
     const MAX_IMAGE_WIDTH = 1000;
     const MACHINE_LIST_KEY = "cfg_machine_list"; const CONCERN_LIST_KEY = "cfg_concern_list"; const EMPLOYEE_ID_KEY = "cfg_employee_id";
-    // 預設清單保留但不使用，因已改為直接輸入
     const DEFAULT_MACHINE_LIST = [];
     const DEFAULT_CONCERN_LIST = [];
     const DEFAULT_VOICE_TIMEOUT = 1.5;
@@ -338,9 +330,6 @@
         
         loadSettingsToUI(); loadEmployeeID(); 
         
-        // 註解掉載入清單的功能，因為現在是純輸入框
-        // loadMachineListToUI(); loadConcernSectionToUI();
-        
         document.getElementById('input-stop-time-full').value = ""; document.getElementById('input-start-time-full').value = "";
         document.getElementById('input-total-time').value = ""; document.getElementById('input-total-time').style.backgroundColor = '#eee';
         document.getElementById('total-time-unit').value = "min"; 
@@ -349,7 +338,7 @@
         applySettings(); loadRecentRecords();
     }
 
-    function openSettings(){document.getElementById('settings-modal').style.display='flex';renderConcernListSettings();renderMachineListSettings();}
+    function openSettings(){document.getElementById('settings-modal').style.display='flex';}
     function closeSettings(){document.getElementById('settings-modal').style.display='none'}
     function saveSettings(){
         const t=parseFloat(document.getElementById('set-timeout').value);if(!isNaN(t))localStorage.setItem("cfg_timeout",t);
@@ -387,20 +376,6 @@
     function syncLanguage(){localStorage.setItem("cfg_lang",document.getElementById('set-lang').value);document.getElementById('voice-lang-select').value=document.getElementById('set-lang').value}
     function syncLanguageToSettings(el){localStorage.setItem("cfg_lang",el.value);document.getElementById('set-lang').value=el.value}
 
-    // 這些列表功能雖然沒用到，但保留程式碼避免報錯
-    function getMachineList(){try{return JSON.parse(localStorage.getItem(MACHINE_LIST_KEY))||DEFAULT_MACHINE_LIST}catch(e){return DEFAULT_MACHINE_LIST}}
-    function saveMachineList(l){localStorage.setItem(MACHINE_LIST_KEY,JSON.stringify(l));renderMachineListSettings()}
-    // function loadMachineListToUI(){...} // 已停用
-    function renderMachineListSettings(){const c=document.getElementById('machine-list-container');c.innerHTML='';getMachineList().forEach(i=>{const d=document.createElement('div');d.innerHTML=`<span>${i}</span><button onclick="removeMachine('${i}')" style="background:var(--danger-color);color:white;border:none;padding:2px 5px;">X</button>`;d.style.cssText="display:flex;justify-content:space-between;margin:5px 0;";c.appendChild(d)})}
-    function addMachine(){const v=document.getElementById('new-machine-name').value.trim().toUpperCase();if(v){let l=getMachineList();if(!l.includes(v)){l.push(v);saveMachineList(l.sort())}document.getElementById('new-machine-name').value=''}}
-    function removeMachine(v){if(confirm(`Remove ${v}?`)){let l=getMachineList().filter(i=>i!==v);saveMachineList(l)}}
-    function getConcernList(){try{return JSON.parse(localStorage.getItem(CONCERN_LIST_KEY))||DEFAULT_CONCERN_LIST}catch(e){return DEFAULT_CONCERN_LIST}}
-    function saveConcernList(l){localStorage.setItem(CONCERN_LIST_KEY,JSON.stringify(l));renderConcernListSettings()}
-    // function loadConcernSectionToUI(){...} // 已停用
-    function renderConcernListSettings(){const c=document.getElementById('concern-section-list-container');c.innerHTML='';getConcernList().forEach(i=>{const d=document.createElement('div');d.innerHTML=`<span>${i}</span><button onclick="removeConcernSection('${i}')" style="background:var(--danger-color);color:white;border:none;padding:2px 5px;">X</button>`;d.style.cssText="display:flex;justify-content:space-between;margin:5px 0;";c.appendChild(d)})}
-    function addConcernSection(){const v=document.getElementById('new-concern-section').value.trim();if(v){let l=getConcernList();if(!l.includes(v)){l.push(v);saveConcernList(l.sort())}document.getElementById('new-concern-section').value=''}}
-    function removeConcernSection(v){if(confirm(`Remove ${v}?`)){let l=getConcernList().filter(i=>i!==v);saveConcernList(l)}}
-    
     function loadEmployeeID(){const v=localStorage.getItem(EMPLOYEE_ID_KEY);if(v)document.getElementById('input-employee-id').value=v}
     function saveEmployeeID(){const v=document.getElementById('input-employee-id').value.trim();if(v)localStorage.setItem(EMPLOYEE_ID_KEY,v)}
     
@@ -420,10 +395,9 @@
         return date;
     }
     
-    // 修改計算邏輯：現在是 Stop(結束) - Start(開始)
     function calculateTotalStopTime() {
-        const s1 = document.getElementById('input-start-time-full').value; // Start
-        const s2 = document.getElementById('input-stop-time-full').value;  // Stop
+        const s1 = document.getElementById('input-start-time-full').value; 
+        const s2 = document.getElementById('input-stop-time-full').value; 
         const t = document.getElementById('input-total-time');
         const u = document.getElementById('total-time-unit').value;
         if(!s1||!s2){ t.value=""; t.style.background='#eee'; return; }
@@ -431,7 +405,6 @@
         const d2 = parseCustomDateTime(s2);
         if(!d1||!d2){ t.value="Invalid Format"; t.style.background='#fdd'; return; }
         
-        // Stop - Start
         const diff = Math.round((d2 - d1) / 60000);
         
         if(diff <= 0){ t.value="0 (Check Time)"; t.style.background='#fdd'; return; }
@@ -439,7 +412,6 @@
         t.style.background='#e6ffed';
     }
 
-    // 新增：計算 Total Stock
     function calculateTotalStock() {
         const weight = parseFloat(document.getElementById('input-concern-section').value) || 0;
         const whStock = parseFloat(document.getElementById('input-solution').value) || 0;
@@ -469,8 +441,7 @@
                 const recordsToShow = res.data.slice(0, limit);
                 recordsToShow.forEach(r=>{
                     const i=document.createElement('div');i.className='record-item';i.setAttribute('onclick',`populateForm('${r.formNo}')`);
-                    // 顯示時，機台欄位現在顯示車牌
-                    i.innerHTML=`<div class="main-info-group"><span class="form-no-display">#${r.formNo||'N/A'}</span><span class="stop-time-display">🛑 ${r.stopTime||"No Time"}</span></div><div class="details"><div>${r.machine||'N/A'} (${r.concernSection||'N/A'})</div><div>${r.startTime?'Start: '+r.startTime:''}</div></div>`;
+                    i.innerHTML=`<div class="main-info-group"><span class="form-no-display">#${r.formNo||'N/A'}</span><span class="stop-time-display">🛑 ${r.stopTime||"No Time"}</span></div><div class="details"><div>${r.machine||'N/A'} (${r.concernSection||'N/A'})</div><div>${r.startTime?'Arr: '+r.startTime:''}</div></div>`;
                     listContainer.appendChild(i)
                 })
             }else{listContainer.innerHTML='<p style="text-align: center; color: #999;">無最近紀錄。</p>'}
@@ -489,10 +460,9 @@
                 });
 
                 document.getElementById('input-employee-id').value=d.employeeId;
-                document.getElementById('input-machine').value=d.machine;
-                document.getElementById('input-form-no').value=d.formNo;
+                document.getElementById('input-machine').value=d.machine; // SAP Code
+                document.getElementById('input-form-no').value=d.formNo; // Material Name
                 
-                // 注意：這裡回填時，ID 已經變換用途
                 document.getElementById('input-stop-time-full').value=d.stopTimeFull?d.stopTimeFull.trim():"";
                 document.getElementById('input-start-time-full').value=d.startTimeFull?d.startTimeFull.trim():"";
                 
@@ -501,8 +471,11 @@
                 document.getElementById('input-solution').value=d.solution;
                 document.getElementById('input-self-actions').value=d.selfActions;
                 
+                // Number of Truck 無法直接回填，因為沒有獨立後端欄位，除非解析 Notes，這裡先留白
+                document.getElementById('input-truck-num').value="";
+
                 calculateTotalStopTime();
-                calculateTotalStock(); // 回填後也計算一次
+                calculateTotalStock(); 
                 showStatus('success','Loaded','');setTimeout(closeStatusModal,1000)
             }else{showStatus('error','Failed',res.error)}
         }).catch(e=>showStatus('error','Error','Network'))
@@ -606,50 +579,41 @@
     function showStatus(t,h,s){const m=document.getElementById('status-modal');document.getElementById('status-text').innerText=h;document.getElementById('status-subtext').innerText=s;document.getElementById('status-spinner').style.display=t==='loading'?'block':'none';document.getElementById('status-icon').style.display=t!=='loading'?'block':'none';document.getElementById('status-close-btn').style.display=t!=='loading'?'block':'none';document.getElementById('status-icon').innerText=t==='success'?'✅':'❌';m.style.display='flex'}
     function closeStatusModal(){document.getElementById('status-modal').style.display='none'}
     
+    // 修改：完全依照要求的複製格式
     function copyFormattedInfo(){
         const emp = document.getElementById('input-employee-id').value || "N/A";
-        // 變更對應名稱
-        const plate = document.getElementById('input-machine').value || "N/A";
+        const sapCode = document.getElementById('input-machine').value || "N/A";
         const material = document.getElementById('input-form-no').value || "N/A";
-        const start = document.getElementById('input-start-time-full').value || "";
-        const stop = document.getElementById('input-stop-time-full').value || "";
-        const total = document.getElementById('input-total-time').value || "";
-        const weight = document.getElementById('input-concern-section').value || "N/A";
+        const arrTime = document.getElementById('input-start-time-full').value || "";
+        const endTime = document.getElementById('input-stop-time-full').value || "";
+        const numTruck = document.getElementById('input-truck-num').value || "N/A";
+        const inboundWeight = document.getElementById('input-concern-section').value || "N/A";
         const mxStock = document.getElementById('input-reason').value || "N/A";
         const whStock = document.getElementById('input-solution').value || "N/A";
         const totalStock = document.getElementById('input-total-stock').value || "N/A";
         const notes = document.getElementById('input-self-actions').value || "N/A";
 
-        if (plate === "N/A" && material === "N/A") {
-            alert("請至少填寫 貨櫃車牌 與 原材料名稱");
+        if (sapCode === "N/A" && material === "N/A") {
+            alert("請至少填寫 SAP CODE 與 Material Name");
             return;
         }
 
         const textToCopy = 
-`[Container Record]
-
+`【Container Record】
 Employee: ${emp}
-
-Plate: ${plate}
-
-Material: ${material}
-
------------------------
-Start Time: ${start}
-
-Stop Time: ${stop}
-
-Total Time: ${total}
-
------------------------
-Weight: ${weight}
-
+------------------------
+SAP CODE: ${sapCode}
+Material Name : ${material}
+------------------------
+Arrival Time : ${arrTime}
+Out End time : ${endTime}
+Number of Truck : ${numTruck}
+--------------------------
+Material Inbound Weight: ${inboundWeight}
 MX Stock: ${mxStock}
-
 WH Stock: ${whStock}
-
 Tatol Stock: ${totalStock}
-
+------------------------------
 Notes: 
 ${notes}`;
 
@@ -667,6 +631,7 @@ ${notes}`;
         document.getElementById('input-stop-time-full').value="";
         document.getElementById('input-start-time-full').value="";
         document.getElementById('input-total-time').value="";
+        document.getElementById('input-truck-num').value="";
         document.getElementById('input-concern-section').value="";
         document.getElementById('input-reason').value="";
         document.getElementById('input-solution').value="";
@@ -686,25 +651,30 @@ ${notes}`;
     function saveToCloud(){
         if(isRecording)manualStopVoice();
         
+        // 為了不影響後端程式碼，將新增的欄位併入 Notes (selfActions) 儲存
+        let noteContent = document.getElementById('input-self-actions').value;
+        const truckNum = document.getElementById('input-truck-num').value;
+        if(truckNum) {
+            noteContent += `\n[Truck No: ${truckNum}]`;
+        }
+
         const d={
             image1: processedImages[1],
             image2: processedImages[2],
             employeeId:document.getElementById('input-employee-id').value,
-            // 這裡保留原本的參數 key (machine, formNo 等)，但內容已經變更為使用者輸入的車牌、材料等
-            machine:document.getElementById('input-machine').value,
-            formNo:document.getElementById('input-form-no').value,
-            // 注意：因為欄位互換，這裡的 IDs 已經對應到新的邏輯 Start/Stop
-            startTimeFull:document.getElementById('input-start-time-full').value,
-            stopTimeFull:document.getElementById('input-stop-time-full').value,
+            machine:document.getElementById('input-machine').value, // SAP CODE
+            formNo:document.getElementById('input-form-no').value, // Material Name
+            startTimeFull:document.getElementById('input-start-time-full').value, // Arrival
+            stopTimeFull:document.getElementById('input-stop-time-full').value,   // End
             
-            concernSection:document.getElementById('input-concern-section').value, // Weight
+            concernSection:document.getElementById('input-concern-section').value, // Inbound Weight
             reason:document.getElementById('input-reason').value,         // MX Stock
             solution:document.getElementById('input-solution').value,       // WH Stock
-            selfActions:document.getElementById('input-self-actions').value,// Notes
+            selfActions:noteContent, // Notes + Truck No
             folderId:FIXED_FOLDER_ID
         };
         
-        if(!d.formNo){alert("請輸入原材料名稱 (Form No)");return}
+        if(!d.formNo){alert("Material Name required");return}
         saveEmployeeID();showStatus('loading','Uploading...','');
         fetch(GAS_URL,{method:'POST',body:JSON.stringify(d)}).then(r=>r.json()).then(res=>{if(res.result==='success'){showStatus('success','Saved!',res.action);clearInputs();loadRecentRecords();setTimeout(closeStatusModal,2000)}else{showStatus('error','Failed',res.error)}}).catch(e=>showStatus('error','Error',e.message)).finally(()=>document.getElementById('saveBtn').disabled=false);
     }
