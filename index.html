@@ -161,7 +161,7 @@
     </div>
 
     <div id="app-screen">
-        <div class="author-header">Author: DEREK LIN (v4.9)</div>
+        <div class="author-header">Author: DEREK LIN (v5.1)</div>
         <div class="header">
             <div style="width: 36px;"></div> 
             <div class="header-title"><h2>Container MM INFO<br>貨櫃管理資訊</h2></div>
@@ -261,22 +261,22 @@
                     </div>
 
                     <div class="input-group">
-                        <label class="input-label">Material Inbound Weight :</label>
+                        <label class="input-label">RW Material Weight :</label>
                         <input type="number" id="input-concern-section" class="text-input" placeholder="Enter Weight" oninput="calculateTotalStock()">
                     </div>
                     
                     <div class="input-group">
-                        <label class="input-label">MX stocK :</label>
-                        <input type="number" id="input-reason" class="text-input" placeholder="Enter MX Stock">
+                        <label class="input-label">MX Stock :</label>
+                        <input type="number" id="input-reason" class="text-input" placeholder="Enter MX Stock" oninput="calculateTotalStock()">
                     </div>
                     
                     <div class="input-group">
-                        <label class="input-label">WH stocK :</label>
+                        <label class="input-label">WH Stock :</label>
                         <input type="number" id="input-solution" class="text-input" placeholder="Enter WH Stock" oninput="calculateTotalStock()">
                     </div>
 
                     <div class="input-group">
-                        <label class="input-label">Tatol stocK :</label>
+                        <label class="input-label">Tatol Stock :</label>
                         <input type="text" id="input-total-stock" class="text-input" readonly style="background-color: #eee; font-weight: bold;" placeholder="Auto Calc">
                     </div>
 
@@ -413,9 +413,11 @@
     }
 
     function calculateTotalStock() {
-        const weight = parseFloat(document.getElementById('input-concern-section').value) || 0;
-        const whStock = parseFloat(document.getElementById('input-solution').value) || 0;
-        const total = weight + whStock;
+        const inbound = parseFloat(document.getElementById('input-concern-section').value) || 0; 
+        const mxStock = parseFloat(document.getElementById('input-reason').value) || 0; 
+        const whStock = parseFloat(document.getElementById('input-solution').value) || 0; 
+        
+        const total = inbound + mxStock + whStock;
         document.getElementById('input-total-stock').value = total;
     }
     
@@ -460,8 +462,8 @@
                 });
 
                 document.getElementById('input-employee-id').value=d.employeeId;
-                document.getElementById('input-machine').value=d.machine; // SAP Code
-                document.getElementById('input-form-no').value=d.formNo; // Material Name
+                document.getElementById('input-machine').value=d.machine; 
+                document.getElementById('input-form-no').value=d.formNo; 
                 
                 document.getElementById('input-stop-time-full').value=d.stopTimeFull?d.stopTimeFull.trim():"";
                 document.getElementById('input-start-time-full').value=d.startTimeFull?d.startTimeFull.trim():"";
@@ -471,7 +473,6 @@
                 document.getElementById('input-solution').value=d.solution;
                 document.getElementById('input-self-actions').value=d.selfActions;
                 
-                // Number of Truck 無法直接回填，因為沒有獨立後端欄位，除非解析 Notes，這裡先留白
                 document.getElementById('input-truck-num').value="";
 
                 calculateTotalStopTime();
@@ -579,7 +580,7 @@
     function showStatus(t,h,s){const m=document.getElementById('status-modal');document.getElementById('status-text').innerText=h;document.getElementById('status-subtext').innerText=s;document.getElementById('status-spinner').style.display=t==='loading'?'block':'none';document.getElementById('status-icon').style.display=t!=='loading'?'block':'none';document.getElementById('status-close-btn').style.display=t!=='loading'?'block':'none';document.getElementById('status-icon').innerText=t==='success'?'✅':'❌';m.style.display='flex'}
     function closeStatusModal(){document.getElementById('status-modal').style.display='none'}
     
-    // 修改：完全依照要求的複製格式
+    // 修改：完全依照要求的複製格式，調整分隔線與縮排
     function copyFormattedInfo(){
         const emp = document.getElementById('input-employee-id').value || "N/A";
         const sapCode = document.getElementById('input-machine').value || "N/A";
@@ -600,19 +601,26 @@
 
         const textToCopy = 
 `【Container Record】
-Employee: ${emp}
-------------------------
+    Employee: ${emp}
+--------------------------
 SAP CODE: ${sapCode}
 Material Name : ${material}
+
 ------------------------
 Arrival Time : ${arrTime}
+
 Out End time : ${endTime}
+
 Number of Truck : ${numTruck}
+
 --------------------------
-Material Inbound Weight: ${inboundWeight}
+RW Material Weight: ${inboundWeight}
+
 MX Stock: ${mxStock}
 WH Stock: ${whStock}
+
 Tatol Stock: ${totalStock}
+
 ------------------------------
 Notes: 
 ${notes}`;
@@ -651,7 +659,6 @@ ${notes}`;
     function saveToCloud(){
         if(isRecording)manualStopVoice();
         
-        // 為了不影響後端程式碼，將新增的欄位併入 Notes (selfActions) 儲存
         let noteContent = document.getElementById('input-self-actions').value;
         const truckNum = document.getElementById('input-truck-num').value;
         if(truckNum) {
@@ -662,15 +669,15 @@ ${notes}`;
             image1: processedImages[1],
             image2: processedImages[2],
             employeeId:document.getElementById('input-employee-id').value,
-            machine:document.getElementById('input-machine').value, // SAP CODE
-            formNo:document.getElementById('input-form-no').value, // Material Name
-            startTimeFull:document.getElementById('input-start-time-full').value, // Arrival
-            stopTimeFull:document.getElementById('input-stop-time-full').value,   // End
+            machine:document.getElementById('input-machine').value,
+            formNo:document.getElementById('input-form-no').value,
+            startTimeFull:document.getElementById('input-start-time-full').value,
+            stopTimeFull:document.getElementById('input-stop-time-full').value,
             
-            concernSection:document.getElementById('input-concern-section').value, // Inbound Weight
-            reason:document.getElementById('input-reason').value,         // MX Stock
-            solution:document.getElementById('input-solution').value,       // WH Stock
-            selfActions:noteContent, // Notes + Truck No
+            concernSection:document.getElementById('input-concern-section').value,
+            reason:document.getElementById('input-reason').value,
+            solution:document.getElementById('input-solution').value,
+            selfActions:noteContent,
             folderId:FIXED_FOLDER_ID
         };
         
