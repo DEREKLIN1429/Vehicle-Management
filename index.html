@@ -161,7 +161,7 @@
     </div>
 
     <div id="app-screen">
-        <div class="author-header">Author: DEREK LIN (v5.3)</div>
+        <div class="author-header">Author: DEREK LIN (v5.4)</div>
         <div class="header">
             <div style="width: 36px;"></div> 
             <div class="header-title"><h2>Container MM INFO<br>貨櫃管理資訊</h2></div>
@@ -256,8 +256,13 @@
                     </div>
 
                     <div class="input-group">
-                        <label class="input-label">Number of Truck :</label>
-                        <input type="text" id="input-truck-num" class="text-input" placeholder="輸入車次數量">
+                        <label class="input-label">Truck No (班次) :</label>
+                        <input type="text" id="input-truck-num" class="text-input" placeholder="輸入班次 (e.g. 1)">
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label">Number of Truck (車牌) :</label>
+                        <input type="text" id="input-plate-num" class="text-input" placeholder="輸入車牌號碼">
                     </div>
 
                     <div class="input-group">
@@ -473,8 +478,9 @@
                 document.getElementById('input-solution').value=d.solution;
                 document.getElementById('input-self-actions').value=d.selfActions;
                 
-                // 修正：回填獨立的 Truck No
                 document.getElementById('input-truck-num').value=d.truckNum || "";
+                // 車牌 (Number of Truck) 沒有獨立欄位儲存，所以這裡暫時不回填，或需從 Notes 解析
+                document.getElementById('input-plate-num').value="";
 
                 calculateTotalStopTime();
                 calculateTotalStock(); 
@@ -581,13 +587,16 @@
     function showStatus(t,h,s){const m=document.getElementById('status-modal');document.getElementById('status-text').innerText=h;document.getElementById('status-subtext').innerText=s;document.getElementById('status-spinner').style.display=t==='loading'?'block':'none';document.getElementById('status-icon').style.display=t!=='loading'?'block':'none';document.getElementById('status-close-btn').style.display=t!=='loading'?'block':'none';document.getElementById('status-icon').innerText=t==='success'?'✅':'❌';m.style.display='flex'}
     function closeStatusModal(){document.getElementById('status-modal').style.display='none'}
     
+    // 修改：Copy 格式調整，增加 Plate Number (Number of Truck)
     function copyFormattedInfo(){
         const emp = document.getElementById('input-employee-id').value || "N/A";
         const sapCode = document.getElementById('input-machine').value || "N/A";
         const material = document.getElementById('input-form-no').value || "N/A";
         const arrTime = document.getElementById('input-start-time-full').value || "";
         const endTime = document.getElementById('input-stop-time-full').value || "";
-        const numTruck = document.getElementById('input-truck-num').value || "N/A";
+        const numTruck = document.getElementById('input-truck-num').value || "N/A"; // 班次
+        const plateNum = document.getElementById('input-plate-num').value || "N/A"; // 車牌
+        
         const inboundWeight = document.getElementById('input-concern-section').value || "N/A";
         const mxStock = document.getElementById('input-reason').value || "N/A";
         const whStock = document.getElementById('input-solution').value || "N/A";
@@ -608,7 +617,8 @@ Material Name : ${material}
 Arrival Time : ${arrTime}
 End time : ${endTime}
 
-Number of Truck : ${numTruck}
+Truck No: ${numTruck}
+Number of Truck : ${plateNum}
 RW Material Weight: ${inboundWeight}
 
 MX Stock: ${mxStock}
@@ -635,6 +645,7 @@ ${notes}`;
         document.getElementById('input-start-time-full').value="";
         document.getElementById('input-total-time').value="";
         document.getElementById('input-truck-num').value="";
+        document.getElementById('input-plate-num').value=""; // Clear new field
         document.getElementById('input-concern-section').value="";
         document.getElementById('input-reason').value="";
         document.getElementById('input-solution').value="";
@@ -654,8 +665,13 @@ ${notes}`;
     function saveToCloud(){
         if(isRecording)manualStopVoice();
         
-        // 修正：不再將 Truck No 合併到 Notes
+        // 修改：為了不改動後端程式碼，將車牌號碼 (Plate Num) 附加到 Notes 欄位
         let noteContent = document.getElementById('input-self-actions').value;
+        const plateNum = document.getElementById('input-plate-num').value;
+        if(plateNum) {
+            noteContent += `\n[Plate No: ${plateNum}]`;
+        }
+        
         const truckNum = document.getElementById('input-truck-num').value;
 
         const d={
@@ -667,13 +683,12 @@ ${notes}`;
             startTimeFull:document.getElementById('input-start-time-full').value,
             stopTimeFull:document.getElementById('input-stop-time-full').value,
             
-            // 新增：傳送獨立的 truckNum
             truckNum: truckNum,
             
             concernSection:document.getElementById('input-concern-section').value,
             reason:document.getElementById('input-reason').value,
             solution:document.getElementById('input-solution').value,
-            selfActions:noteContent,
+            selfActions:noteContent, // Notes + Plate No
             folderId:FIXED_FOLDER_ID
         };
         
