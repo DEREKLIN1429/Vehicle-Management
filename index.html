@@ -36,7 +36,9 @@
             margin: 0 auto 15px auto;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #app-screen { width: 100%; max-width: 500px; padding: 10px; box-sizing: border-box; }
+        
+        /* 修改：#app-screen 預設為手機寬度 */
+        #app-screen { width: 100%; max-width: 500px; padding: 10px; box-sizing: border-box; transition: max-width 0.3s ease; }
         
         /* --- Header 修改處開始 --- */
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
@@ -56,14 +58,19 @@
         .btn-half { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; gap: 5px;}
         .btn-cam { background-color: #FF5722; color: white; } 
         .btn-gallery { background-color: #FFC107; color: #333; } 
-        #preview-container {
+        
+        /* 修改：將預覽容器的 ID 通用化為 class */
+        .preview-container-box {
             max-width: 100%; height: auto; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden;
-            background: #e0e0e0; border-radius: 8px; min-height: 150px; 
+            background: #e0e0e0; border-radius: 8px; min-height: 150px; cursor: pointer;
         }
         .ratio-4-3 { aspect-ratio: 4 / 3; } .ratio-16-9 { aspect-ratio: 16 / 9; } .ratio-9-16 { aspect-ratio: 9 / 16; } .ratio-1-1 { aspect-ratio: 1 / 1; }
-        #preview-container .placeholder { position: absolute; color: #666; font-size: 1.1em; font-weight: bold; text-align: center; }
-        #preview-img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: cover; display: none; }
-        #ratio-display-tag { position: absolute; bottom: 5px; right: 5px; background: rgba(0,0,0,0.6); color: white; padding: 2px 5px; border-radius: 4px; font-size: 0.7rem; z-index: 10; }
+        
+        /* 修改：通用化 placeholder 和 img 的選擇器 */
+        .preview-container-box .placeholder { position: absolute; color: #666; font-size: 1.1em; font-weight: bold; text-align: center; }
+        .preview-img-display { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: cover; display: none; }
+        .ratio-tag { position: absolute; bottom: 5px; right: 5px; background: rgba(0,0,0,0.6); color: white; padding: 2px 5px; border-radius: 4px; font-size: 0.7rem; z-index: 10; }
+        
         .input-group { margin-bottom: 8px; display: flex; flex-direction: column; }
         .input-label { font-weight: bold; font-size: 0.9rem; color: #333; margin-bottom: 4px; }
         .text-input, textarea, select.text-input { 
@@ -106,6 +113,40 @@
         
         .btn-voice.recording { background-color: var(--danger-color); color: white; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
+
+        /* =========================================
+           修改：新增桌面版 (大螢幕) 樣式
+           當螢幕寬度大於 900px 時應用此樣式
+        ========================================= */
+        @media (min-width: 900px) {
+            /* 放大主容器最大寬度 */
+            #app-screen { max-width: 1100px; }
+            
+            /* 建立雙欄位 flex 容器 */
+            .main-content-wrapper {
+                display: flex;
+                gap: 20px; /* 左右欄位間距 */
+                align-items: flex-start; /* 靠上對齊 */
+            }
+            
+            /* 左側照片欄位 */
+            .left-photo-column {
+                flex: 2; /* 佔據 2/5 寬度 (約40%) */
+                display: flex;
+                flex-direction: column;
+                gap: 15px; /* 兩個照片卡片間距 */
+            }
+            
+            /* 右側資訊欄位 */
+            .right-info-column {
+                flex: 3; /* 佔據 3/5 寬度 (約60%) */
+            }
+
+            /* 調整桌面版照片卡片不需要底部 margin，因為有 gap */
+            .left-photo-column .card { margin-bottom: 0; }
+            /* 調整桌面版右側第一個卡片不需要上方 margin */
+            .right-info-column .card:first-child { margin-top: 0; }
+        }
     </style>
 </head>
 <body>
@@ -165,7 +206,7 @@
     </div>
 
     <div id="app-screen">
-        <div class="author-header">Author: DEREK LIN (v4.7)</div>
+        <div class="author-header">Author: DEREK LIN (v4.7-DesktopUI)</div>
         <div class="header">
             <div style="width: 36px;"></div> 
             <div class="header-title"><h2>Container MM INFO<br>貨櫃管理資訊</h2></div>
@@ -175,83 +216,105 @@
             <label class="input-label">Employee ID:</label>
             <input type="text" id="input-employee-id" class="text-input" placeholder="儲存後不會清除">
         </div>
-        <div class="card">
-            <span class="section-title">1. Photo</span>
-            <div class="photo-controls">
-                <button class="btn-half btn-cam" onclick="triggerFile('input-cam')">📷 Camera</button>
-                <button class="btn-half btn-gallery" onclick="triggerFile('input-gallery')">🖼️ Gallery</button>
-            </div>
-            <div id="preview-container" class="ratio-4-3" onclick="triggerFile('input-cam')">
-                <div class="ratio-tag" id="ratio-display-tag">Ratio: 4:3</div>
-                <span class="placeholder">Tap here to Take Photo</span>
-                <img id="preview-img">
-            </div>
-            <input type="file" id="input-cam" accept="image/*" capture="environment" class="hidden" onchange="handleFile(this)">
-            <input type="file" id="input-gallery" accept="image/*" class="hidden" onchange="handleFile(this)">
-        </div>
-        <div class="card" id="info-card">
-            <span class="section-title">2. Machine NG Information</span>
+
+        <div class="main-content-wrapper">
             
-            <div class="input-group">
-                <label class="input-label" style="color: #FF5722;">🗣️ Voice Language (語音語言):</label>
-                <select id="voice-lang-select" class="text-input" onchange="syncLanguageToSettings(this)">
-                    <option value="cmn-Hant-TW">Chinese (TW) - 繁體中文</option>
-                    <option value="en-US">English - 英文</option>
-                    <option value="ja-JP">Japanese - 日文</option>
-                    <option value="hi-IN">Hindi - 印地語</option>
-                </select>
-            </div>
+            <div class="left-photo-column">
+                
+                <div class="card">
+                    <span class="section-title">1. Photo A (主要照片)</span>
+                    <div class="photo-controls">
+                        <button class="btn-half btn-cam" onclick="triggerFile('input-cam_1')">📷 Camera A</button>
+                        <button class="btn-half btn-gallery" onclick="triggerFile('input-gallery_1')">🖼️ Gallery A</button>
+                    </div>
+                    <div id="preview-container_1" class="preview-container-box ratio-4-3" onclick="triggerFile('input-cam_1')">
+                        <div class="ratio-tag" id="ratio-display-tag_1">Ratio: 4:3</div>
+                        <span id="placeholder_1" class="placeholder">Tap here for Photo A</span>
+                        <img id="preview-img_1" class="preview-img-display">
+                    </div>
+                    <input type="file" id="input-cam_1" accept="image/*" capture="environment" class="hidden" onchange="handleFile(this, 1)">
+                    <input type="file" id="input-gallery_1" accept="image/*" class="hidden" onchange="handleFile(this, 1)">
+                </div>
 
-            <div class="input-group"><label class="input-label">Machine :</label><select id="input-machine" class="text-input"></select></div>
-            <div class="input-group"><label class="input-label">Repair Form No:</label><input type="text" id="input-form-no" class="text-input" placeholder="e.g. A69304"></div>
-            <div class="time-component">
-                <label class="input-label">Stop time : (DD/MM/YYYY hh:mm) (IST)</label>
-                <div class="time-input-row">
-                    <input type="text" id="input-stop-time-full" class="text-input" placeholder="請點右側按鈕或手動輸入" oninput="calculateTotalStopTime()">
-                    <button type="button" class="btn-update-time" onclick="updateSingleTime('input-stop-time-full')"><span style="font-size: 1.1em;">⏱️</span></button>
+                <div class="card">
+                    <span class="section-title">Photo B (輔助照片)</span>
+                    <div class="photo-controls">
+                        <button class="btn-half btn-cam" onclick="triggerFile('input-cam_2')">📷 Camera B</button>
+                        <button class="btn-half btn-gallery" onclick="triggerFile('input-gallery_2')">🖼️ Gallery B</button>
+                    </div>
+                    <div id="preview-container_2" class="preview-container-box ratio-4-3" onclick="triggerFile('input-cam_2')">
+                        <div class="ratio-tag" id="ratio-display-tag_2">Ratio: 4:3</div>
+                        <span id="placeholder_2" class="placeholder">Tap here for Photo B</span>
+                        <img id="preview-img_2" class="preview-img-display">
+                    </div>
+                    <input type="file" id="input-cam_2" accept="image/*" capture="environment" class="hidden" onchange="handleFile(this, 2)">
+                    <input type="file" id="input-gallery_2" accept="image/*" class="hidden" onchange="handleFile(this, 2)">
                 </div>
-            </div>
-            <div class="time-component">
-                <label class="input-label">Start time : (DD/MM/YYYY hh:mm) (IST)</label>
-                <div class="time-input-row">
-                    <input type="text" id="input-start-time-full" class="text-input" placeholder="請點右側按鈕或手動輸入" oninput="calculateTotalStopTime()">
-                    <button type="button" class="btn-update-time" onclick="updateSingleTime('input-start-time-full')"><span style="font-size: 1.1em;">⏱️</span></button>
-                </div>
-            </div>
-            <div class="input-group">
-                <label class="input-label">Total stop time :</label>
-                <div class="total-time-input-group">
-                    <input type="text" id="input-total-time" class="text-input" readonly style="background-color: #eee; font-weight: bold;">
-                    <button type="button" class="btn-calc" onclick="calculateTotalStopTime()" title="Recalculate">🔄</button>
-                    <select id="total-time-unit" onchange="calculateTotalStopTime()" class="text-input"><option value="min" selected>min</option><option value="h">hr</option></select>
-                </div>
-            </div>
-            <div class="input-group"><label class="input-label">Concern Section :</label><select id="input-concern-section" class="text-input"></select></div>
-            <div class="input-group">
-                <label class="input-label">Reason :</label><textarea id="input-reason"></textarea>
-                <div class="voice-control-group"><button type="button" class="btn-voice" data-target="input-reason" onclick="toggleVoice(this)">🎤 語音輸入</button></div>
-            </div>
-            <div class="input-group">
-                <label class="input-label">How to Solve Problem:</label><textarea id="input-solution"></textarea>
-                <div class="voice-control-group"><button type="button" class="btn-voice" data-target="input-solution" onclick="toggleVoice(this)">🎤 語音輸入</button></div>
-            </div>
-            <div class="input-group">
-                <label class="input-label">Self Actions:</label><textarea id="input-self-actions"></textarea>
-                <div class="voice-control-group"><button type="button" class="btn-voice" data-target="input-self-actions" onclick="toggleVoice(this)">🎤 語音輸入</button></div>
-            </div>
-        </div>
 
-        <div id="recent-records-container" class="card">
-            <h4>最近紀錄 (Recent Records)</h4> <div id="recent-records-list"><p style="text-align: center; color: #999;">Loading recent records...</p></div>
-        </div>
-        
-        <div class="footer-btns">
-            <button class="btn-main btn-copy" onclick="copyFormattedInfo()">📋<br>Copy Info</button>
-            <button class="btn-main btn-save" id="saveBtn" onclick="saveToCloud()">💾<br>Save to Cloud</button>
-            <button class="btn-main btn-view" onclick="viewExcel()">📊<br>View Excel</button>
-            <button class="btn-main btn-drive" onclick="viewDriveFolder()">📂<br>View Photos</button>
-        </div>
-    </div>
+            </div> <div class="right-info-column">
+                <div class="card" id="info-card">
+                    <span class="section-title">2. Machine NG Information</span>
+                    
+                    <div class="input-group">
+                        <label class="input-label" style="color: #FF5722;">🗣️ Voice Language (語音語言):</label>
+                        <select id="voice-lang-select" class="text-input" onchange="syncLanguageToSettings(this)">
+                            <option value="cmn-Hant-TW">Chinese (TW) - 繁體中文</option>
+                            <option value="en-US">English - 英文</option>
+                            <option value="ja-JP">Japanese - 日文</option>
+                            <option value="hi-IN">Hindi - 印地語</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group"><label class="input-label">Machine :</label><select id="input-machine" class="text-input"></select></div>
+                    <div class="input-group"><label class="input-label">Repair Form No:</label><input type="text" id="input-form-no" class="text-input" placeholder="e.g. A69304"></div>
+                    <div class="time-component">
+                        <label class="input-label">Stop time : (DD/MM/YYYY hh:mm) (IST)</label>
+                        <div class="time-input-row">
+                            <input type="text" id="input-stop-time-full" class="text-input" placeholder="請點右側按鈕或手動輸入" oninput="calculateTotalStopTime()">
+                            <button type="button" class="btn-update-time" onclick="updateSingleTime('input-stop-time-full')"><span style="font-size: 1.1em;">⏱️</span></button>
+                        </div>
+                    </div>
+                    <div class="time-component">
+                        <label class="input-label">Start time : (DD/MM/YYYY hh:mm) (IST)</label>
+                        <div class="time-input-row">
+                            <input type="text" id="input-start-time-full" class="text-input" placeholder="請點右側按鈕或手動輸入" oninput="calculateTotalStopTime()">
+                            <button type="button" class="btn-update-time" onclick="updateSingleTime('input-start-time-full')"><span style="font-size: 1.1em;">⏱️</span></button>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Total stop time :</label>
+                        <div class="total-time-input-group">
+                            <input type="text" id="input-total-time" class="text-input" readonly style="background-color: #eee; font-weight: bold;">
+                            <button type="button" class="btn-calc" onclick="calculateTotalStopTime()" title="Recalculate">🔄</button>
+                            <select id="total-time-unit" onchange="calculateTotalStopTime()" class="text-input"><option value="min" selected>min</option><option value="h">hr</option></select>
+                        </div>
+                    </div>
+                    <div class="input-group"><label class="input-label">Concern Section :</label><select id="input-concern-section" class="text-input"></select></div>
+                    <div class="input-group">
+                        <label class="input-label">Reason :</label><textarea id="input-reason"></textarea>
+                        <div class="voice-control-group"><button type="button" class="btn-voice" data-target="input-reason" onclick="toggleVoice(this)">🎤 語音輸入</button></div>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">How to Solve Problem:</label><textarea id="input-solution"></textarea>
+                        <div class="voice-control-group"><button type="button" class="btn-voice" data-target="input-solution" onclick="toggleVoice(this)">🎤 語音輸入</button></div>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Self Actions:</label><textarea id="input-self-actions"></textarea>
+                        <div class="voice-control-group"><button type="button" class="btn-voice" data-target="input-self-actions" onclick="toggleVoice(this)">🎤 語音輸入</button></div>
+                    </div>
+                </div>
+
+                <div id="recent-records-container" class="card">
+                    <h4>最近紀錄 (Recent Records)</h4> <div id="recent-records-list"><p style="text-align: center; color: #999;">Loading recent records...</p></div>
+                </div>
+                
+                <div class="footer-btns">
+                    <button class="btn-main btn-copy" onclick="copyFormattedInfo()">📋<br>Copy Info</button>
+                    <button class="btn-main btn-save" id="saveBtn" onclick="saveToCloud()">💾<br>Save to Cloud</button>
+                    <button class="btn-main btn-view" onclick="viewExcel()">📊<br>View Excel</button>
+                    <button class="btn-main btn-drive" onclick="viewDriveFolder()">📂<br>View Photos</button>
+                </div>
+            </div> </div> </div>
 
 <script>
     // 移除 DEFAULT_PASS
@@ -266,11 +329,12 @@
     const FIXED_SCRIPT_ID = "AKfycbxX-XRuXqIB7JJopFGYaHtiAk6kZfe19bFihOd7HCxrA-ffKQGXDoIfJwwPYFLZER8c/exec"; 
     const FIXED_SHEET_ID = "1OFXZ7fb2AU0iN1I0viHmlpykA_v_JEUaSdluqtF-L_c/edit?gid=0#gid=0"; 
     const FIXED_FOLDER_ID = "1j7Z4EuAFFmdA7w46eoDxun77SD2KxsTe"; 
-    
+     
     const GAS_URL = `https://script.google.com/macros/s/${FIXED_SCRIPT_ID}/exec`;
 
-    // 修正語音變數
-    let processedImageBase64 = "", recognition = null, isRecording = false, activeTextAreaId = null;
+    // 修改：將單一照片變數改為物件，儲存兩張照片
+    let processedImages = { 1: "", 2: "" };
+    let recognition = null, isRecording = false, activeTextAreaId = null;
     let initialText = "", currentSessionFinal = "", punctuationTimer = null; // 修正邏輯用的變數
 
     document.addEventListener('DOMContentLoaded', () => { initApp(); });
@@ -313,8 +377,21 @@
         document.getElementById('set-recent-limit').value = localStorage.getItem("cfg_recent_limit") || DEFAULT_RECENT_LIMIT;
     }
     
+    // 修改：applySettings 需要同時應用到兩個照片框
     function applySettings(){
-        const r=localStorage.getItem("cfg_ratio")||'4/3';const c=document.getElementById('preview-container');c.className='';c.classList.add(r==='4/3'?'ratio-4-3':r==='16/9'?'ratio-16-9':r==='9/16'?'ratio-9-16':'ratio-1-1');document.getElementById('ratio-display-tag').innerText=`Ratio: ${r.replace('/',':')}`;
+        const r=localStorage.getItem("cfg_ratio")||'4/3';
+        const ratioClass = r==='4/3'?'ratio-4-3':r==='16/9'?'ratio-16-9':r==='9/16'?'ratio-9-16':'ratio-1-1';
+        
+        // 迴圈處理兩個照片框
+        [1, 2].forEach(num => {
+            const c = document.getElementById(`preview-container_${num}`);
+            if (c) {
+                c.className = 'preview-container-box'; // 重置 class
+                c.classList.add(ratioClass);
+                document.getElementById(`ratio-display-tag_${num}`).innerText=`Ratio: ${r.replace('/',':')}`;
+            }
+        });
+
         const l = localStorage.getItem("cfg_lang")||'cmn-Hant-TW';
         document.getElementById('voice-lang-select').value = l;
         document.getElementById('set-lang').value = l;
@@ -401,7 +478,14 @@
         if(!confirm(`回填單號 [${f}]?`))return;showStatus('loading','Loading...',f);
         fetch(`${GAS_URL}?action=getRow&formNo=${encodeURIComponent(f)}`).then(r=>r.json()).then(res=>{
             if(res.result==='success'){
-                const d=res.data;processedImageBase64="";document.getElementById('preview-img').style.display='none';document.querySelector('.placeholder').style.display='block';
+                const d=res.data;
+                // 修改：回填時清空兩個照片框 (因為目前沒有從後端讀取照片的功能)
+                processedImages = { 1: "", 2: "" };
+                [1, 2].forEach(num => {
+                     document.getElementById(`preview-img_${num}`).style.display='none';
+                     document.getElementById(`placeholder_${num}`).style.display='block';
+                });
+
                 document.getElementById('input-employee-id').value=d.employeeId;document.getElementById('input-machine').value=d.machine;
                 document.getElementById('input-form-no').value=d.formNo;document.getElementById('input-stop-time-full').value=d.stopTimeFull?d.stopTimeFull.trim():"";
                 document.getElementById('input-start-time-full').value=d.startTimeFull?d.startTimeFull.trim():"";document.getElementById('input-concern-section').value=d.concernSection;
@@ -410,9 +494,32 @@
             }else{showStatus('error','Failed',res.error)}
         }).catch(e=>showStatus('error','Error','Network'))
     }
+    
     function triggerFile(id){document.getElementById(id).click()}
-    function handleFile(i){if(i.files[0]){showStatus('loading','Processing...','');const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>processImageWithCanvas(img);img.src=e.target.result};r.readAsDataURL(i.files[0])}}
-    function processImageWithCanvas(img){const c=document.createElement('canvas');let w=img.width;let h=img.height;if(w>MAX_IMAGE_WIDTH){h=Math.round(h*(MAX_IMAGE_WIDTH/w));w=MAX_IMAGE_WIDTH}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);processedImageBase64=c.toDataURL('image/jpeg',0.8);document.getElementById('preview-img').src=processedImageBase64;document.getElementById('preview-img').style.display='block';document.querySelector('.placeholder').style.display='none';closeStatusModal()}
+
+    // 修改：handleFile 增加 slotNum 參數，知道是哪張照片
+    function handleFile(i, slotNum){
+        if(i.files[0]){
+            showStatus('loading','Processing...','');
+            const r=new FileReader();
+            // 將 slotNum 傳遞給 processImageWithCanvas
+            r.onload=e=>{const img=new Image();img.onload=()=>processImageWithCanvas(img, slotNum);img.src=e.target.result};
+            r.readAsDataURL(i.files[0])
+        }
+    }
+    // 修改：processImageWithCanvas 增加 slotNum 參數，並更新對應的預覽圖和變數
+    function processImageWithCanvas(img, slotNum){
+        const c=document.createElement('canvas');let w=img.width;let h=img.height;if(w>MAX_IMAGE_WIDTH){h=Math.round(h*(MAX_IMAGE_WIDTH/w));w=MAX_IMAGE_WIDTH}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);
+        
+        // 將處理後的照片存入對應的 slot (1 或 2)
+        processedImages[slotNum] = c.toDataURL('image/jpeg',0.8);
+        
+        // 更新對應的預覽元素
+        document.getElementById(`preview-img_${slotNum}`).src = processedImages[slotNum];
+        document.getElementById(`preview-img_${slotNum}`).style.display='block';
+        document.getElementById(`placeholder_${slotNum}`).style.display='none';
+        closeStatusModal();
+    }
     
     function toggleVoice(button) {
         if (!('webkitSpeechRecognition' in window)) { alert("請使用 Chrome 瀏覽器"); return; }
@@ -552,12 +659,42 @@ ${action}`;
 
     function viewExcel(){window.open(`https://docs.google.com/spreadsheets/d/${FIXED_SHEET_ID}/edit`,'_blank')}
     function viewDriveFolder(){window.open(`https://drive.google.com/drive/folders/${FIXED_FOLDER_ID}`,'_blank')}
+    
+    // 修改：clearInputs 清空兩個照片框
     function clearInputs(){
-        document.getElementById('input-machine').value="";document.getElementById('input-form-no').value="";document.getElementById('input-stop-time-full').value="";document.getElementById('input-start-time-full').value="";document.getElementById('input-total-time').value="";document.getElementById('input-reason').value="";document.getElementById('input-solution').value="";document.getElementById('input-self-actions').value="";processedImageBase64="";document.getElementById('preview-img').style.display='none';document.querySelector('.placeholder').style.display='block';calculateTotalStopTime();
+        document.getElementById('input-machine').value="";document.getElementById('input-form-no').value="";document.getElementById('input-stop-time-full').value="";document.getElementById('input-start-time-full').value="";document.getElementById('input-total-time').value="";document.getElementById('input-reason').value="";document.getElementById('input-solution').value="";document.getElementById('input-self-actions').value="";
+        
+        // 清空照片變數和介面
+        processedImages = { 1: "", 2: "" };
+        [1, 2].forEach(num => {
+             document.getElementById(`preview-img_${num}`).style.display='none';
+             document.getElementById(`preview-img_${num}`).src="";
+             document.getElementById(`placeholder_${num}`).style.display='block';
+        });
+        
+        calculateTotalStopTime();
     }
+
     function saveToCloud(){
         if(isRecording)manualStopVoice();
-        const d={image:processedImageBase64,employeeId:document.getElementById('input-employee-id').value,machine:document.getElementById('input-machine').value,stopTimeFull:document.getElementById('input-stop-time-full').value,startTimeFull:document.getElementById('input-start-time-full').value,formNo:document.getElementById('input-form-no').value,reason:document.getElementById('input-reason').value,concernSection:document.getElementById('input-concern-section').value,solution:document.getElementById('input-solution').value,selfActions:document.getElementById('input-self-actions').value,folderId:FIXED_FOLDER_ID};
+        
+        // 修改：傳送 image1 和 image2 到後端
+        // ⚠️ 重要：您的 Google Apps Script (GAS) 也需要修改以接收這兩個參數 ⚠️
+        const d={
+            image1: processedImages[1], // 照片 A
+            image2: processedImages[2], // 照片 B
+            employeeId:document.getElementById('input-employee-id').value,
+            machine:document.getElementById('input-machine').value,
+            stopTimeFull:document.getElementById('input-stop-time-full').value,
+            startTimeFull:document.getElementById('input-start-time-full').value,
+            formNo:document.getElementById('input-form-no').value,
+            reason:document.getElementById('input-reason').value,
+            concernSection:document.getElementById('input-concern-section').value,
+            solution:document.getElementById('input-solution').value,
+            selfActions:document.getElementById('input-self-actions').value,
+            folderId:FIXED_FOLDER_ID
+        };
+        
         if(!d.formNo){alert("Form No required");return}
         saveEmployeeID();showStatus('loading','Uploading...','');
         fetch(GAS_URL,{method:'POST',body:JSON.stringify(d)}).then(r=>r.json()).then(res=>{if(res.result==='success'){showStatus('success','Saved!',res.action);clearInputs();loadRecentRecords();setTimeout(closeStatusModal,2000)}else{showStatus('error','Failed',res.error)}}).catch(e=>showStatus('error','Error',e.message)).finally(()=>document.getElementById('saveBtn').disabled=false);
