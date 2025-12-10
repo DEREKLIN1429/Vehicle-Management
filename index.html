@@ -161,7 +161,7 @@
     </div>
 
     <div id="app-screen">
-        <div class="author-header">Author: DEREK LIN (v5.2)</div>
+        <div class="author-header">Author: DEREK LIN (v5.3)</div>
         <div class="header">
             <div style="width: 36px;"></div> 
             <div class="header-title"><h2>Container MM INFO<br>貨櫃管理資訊</h2></div>
@@ -473,7 +473,8 @@
                 document.getElementById('input-solution').value=d.solution;
                 document.getElementById('input-self-actions').value=d.selfActions;
                 
-                document.getElementById('input-truck-num').value="";
+                // 修正：回填獨立的 Truck No
+                document.getElementById('input-truck-num').value=d.truckNum || "";
 
                 calculateTotalStopTime();
                 calculateTotalStock(); 
@@ -580,7 +581,6 @@
     function showStatus(t,h,s){const m=document.getElementById('status-modal');document.getElementById('status-text').innerText=h;document.getElementById('status-subtext').innerText=s;document.getElementById('status-spinner').style.display=t==='loading'?'block':'none';document.getElementById('status-icon').style.display=t!=='loading'?'block':'none';document.getElementById('status-close-btn').style.display=t!=='loading'?'block':'none';document.getElementById('status-icon').innerText=t==='success'?'✅':'❌';m.style.display='flex'}
     function closeStatusModal(){document.getElementById('status-modal').style.display='none'}
     
-    // 修改：完全依照要求的複製格式，調整ID位置和Notes位置
     function copyFormattedInfo(){
         const emp = document.getElementById('input-employee-id').value || "N/A";
         const sapCode = document.getElementById('input-machine').value || "N/A";
@@ -654,11 +654,9 @@ ${notes}`;
     function saveToCloud(){
         if(isRecording)manualStopVoice();
         
+        // 修正：不再將 Truck No 合併到 Notes
         let noteContent = document.getElementById('input-self-actions').value;
         const truckNum = document.getElementById('input-truck-num').value;
-        if(truckNum) {
-            noteContent += `\n[Truck No: ${truckNum}]`;
-        }
 
         const d={
             image1: processedImages[1],
@@ -668,6 +666,9 @@ ${notes}`;
             formNo:document.getElementById('input-form-no').value,
             startTimeFull:document.getElementById('input-start-time-full').value,
             stopTimeFull:document.getElementById('input-stop-time-full').value,
+            
+            // 新增：傳送獨立的 truckNum
+            truckNum: truckNum,
             
             concernSection:document.getElementById('input-concern-section').value,
             reason:document.getElementById('input-reason').value,
