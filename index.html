@@ -161,7 +161,7 @@
     </div>
 
     <div id="app-screen">
-        <div class="author-header">Author: DEREK LIN (v5.5)</div>
+        <div class="author-header">Author: DEREK LIN (v5.6)</div>
         <div class="header">
             <div style="width: 36px;"></div> 
             <div class="header-title"><h2>Container MM INFO<br>貨櫃管理資訊</h2></div>
@@ -478,9 +478,7 @@
                 document.getElementById('input-solution').value=d.solution;
                 document.getElementById('input-self-actions').value=d.selfActions;
                 
-                // 這裡暫時回填車牌到 truck-num (班次欄位)，因為後端只有一個 truckNo 欄位
-                // 使用者可能需要手動調整
-                document.getElementById('input-truck-num').value=d.truckNum || ""; 
+                document.getElementById('input-truck-num').value=d.truckNum || "";
                 document.getElementById('input-plate-num').value="";
 
                 calculateTotalStopTime();
@@ -588,6 +586,7 @@
     function showStatus(t,h,s){const m=document.getElementById('status-modal');document.getElementById('status-text').innerText=h;document.getElementById('status-subtext').innerText=s;document.getElementById('status-spinner').style.display=t==='loading'?'block':'none';document.getElementById('status-icon').style.display=t!=='loading'?'block':'none';document.getElementById('status-close-btn').style.display=t!=='loading'?'block':'none';document.getElementById('status-icon').innerText=t==='success'?'✅':'❌';m.style.display='flex'}
     function closeStatusModal(){document.getElementById('status-modal').style.display='none'}
     
+    // 修改：Copy 格式調整，指定欄位分行顯示
     function copyFormattedInfo(){
         const emp = document.getElementById('input-employee-id').value || "N/A";
         const sapCode = document.getElementById('input-machine').value || "N/A";
@@ -611,14 +610,23 @@
         const textToCopy = 
 `【Container Record】
   
-SAP CODE: ${sapCode}
-Material Name : ${material}
+SAP CODE:
+${sapCode}
 
-Arrival Time : ${arrTime}
-End time : ${endTime}
+Material Name :
+${material}
+
+Arrival Time :
+${arrTime}
+
+End time :
+${endTime}
 
 Truck No: ${numTruck}
-Number of Truck : ${plateNum}
+
+Number of Truck :
+${plateNum}
+
 RW Material Weight: ${inboundWeight}
 
 MX Stock: ${mxStock}
@@ -645,7 +653,7 @@ ${notes}`;
         document.getElementById('input-start-time-full').value="";
         document.getElementById('input-total-time').value="";
         document.getElementById('input-truck-num').value="";
-        document.getElementById('input-plate-num').value=""; // Clear new field
+        document.getElementById('input-plate-num').value=""; 
         document.getElementById('input-concern-section').value="";
         document.getElementById('input-reason').value="";
         document.getElementById('input-solution').value="";
@@ -662,7 +670,6 @@ ${notes}`;
         calculateTotalStopTime();
     }
 
-    // 修改：將 Plate Num 傳給後端寫入 TRUCK_NO 欄位，將 Truck No (班次) 寫入備註
     function saveToCloud(){
         if(isRecording)manualStopVoice();
         
@@ -684,16 +691,13 @@ ${notes}`;
             startTimeFull:document.getElementById('input-start-time-full').value,
             stopTimeFull:document.getElementById('input-stop-time-full').value,
             
-            // ★★★ 關鍵：將車牌號碼傳送給後端的 truckNum 參數
-            // 後端接收到 truckNum 後會寫入 Excel 的 Truck No 欄位 (Col H)
+            // 將車牌號碼 (plateNum) 傳給後端的 truckNum 參數，以寫入 Excel 的 "Truck No" 欄位
             truckNum: plateNum, 
             
             concernSection:document.getElementById('input-concern-section').value,
             reason:document.getElementById('input-reason').value,
             solution:document.getElementById('input-solution').value,
-            
-            selfActions:noteContent, // 這裡包含了班次資訊
-            
+            selfActions:noteContent, 
             folderId:FIXED_FOLDER_ID
         };
         
