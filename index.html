@@ -80,20 +80,19 @@
         .total-time-input-group .btn-calc { padding: 10px; background: #607D8B; color: white; border: none; border-radius: 6px; cursor: pointer; }
         .total-time-input-group #total-time-unit { width: 75px !important; }
         
-        /* 修改：按鈕高度減半，字體加大，避免溢出 */
         .footer-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; padding-bottom: 20px; }
         .btn-main { 
             width: 100%; 
-            height: 65px; /* 固定高度，約為之前的一半 */
+            height: 65px; 
             padding: 5px; border: none; border-radius: 8px; 
-            font-size: 18px; /* 加大字體 */
+            font-size: 18px; 
             font-weight: 700; cursor: pointer; color: white; 
             transition: background 0.2s, transform 0.1s; 
             display: flex; flex-direction: column; 
             align-items: center; justify-content: center; 
             line-height: 1.1; text-align: center;
-            white-space: nowrap; /* 不換行 */
-            overflow: hidden;    /* 隱藏溢出 */
+            white-space: nowrap; 
+            overflow: hidden;    
         }
         .btn-main:active { transform: scale(0.99); }
         .btn-save { background-color: var(--primary-color); } .btn-copy { background-color: var(--copy-color); }
@@ -169,7 +168,7 @@
     </div>
 
     <div id="app-screen">
-        <div class="author-header">Author: DEREK LIN (v5.9)</div>
+        <div class="author-header">Author: DEREK LIN (v6.0)</div>
         <div class="header">
             <div style="width: 36px;"></div> 
             <div class="header-title"><h2>Container MM INFO<br>貨櫃管理資訊</h2></div>
@@ -456,7 +455,6 @@
                 const recordsToShow = res.data.slice(0, limit);
                 recordsToShow.forEach(r=>{
                     const i=document.createElement('div');i.className='record-item';i.setAttribute('onclick',`populateForm('${r.formNo}')`);
-                    // 列表顯示加入車牌資訊
                     i.innerHTML=`<div class="main-info-group"><span class="form-no-display">#${r.formNo||'N/A'}</span><span class="stop-time-display">🛑 ${r.stopTime||"No Time"}</span></div><div class="details"><div>${r.machine||'N/A'} - ${r.truckNum||'No Plate'}</div><div>${r.startTime?'Arr: '+r.startTime:''}</div></div>`;
                     listContainer.appendChild(i)
                 })
@@ -596,6 +594,7 @@
     function showStatus(t,h,s){const m=document.getElementById('status-modal');document.getElementById('status-text').innerText=h;document.getElementById('status-subtext').innerText=s;document.getElementById('status-spinner').style.display=t==='loading'?'block':'none';document.getElementById('status-icon').style.display=t!=='loading'?'block':'none';document.getElementById('status-close-btn').style.display=t!=='loading'?'block':'none';document.getElementById('status-icon').innerText=t==='success'?'✅':'❌';m.style.display='flex'}
     function closeStatusModal(){document.getElementById('status-modal').style.display='none'}
     
+    // 修改：Copy 格式調整，RW Material Weight 換行顯示
     function copyFormattedInfo(){
         const emp = document.getElementById('input-employee-id').value || "N/A";
         const sapCode = document.getElementById('input-machine').value || "N/A";
@@ -636,7 +635,8 @@ Truck No: ${numTruck}
 Number of Truck :
 ${plateNum}
 
-RW Material Weight: ${inboundWeight}
+RW Material Weight:
+${inboundWeight}
 
 MX Stock: ${mxStock}
 WH Stock: ${whStock}
@@ -695,7 +695,10 @@ ${notes}`;
             startTimeFull:document.getElementById('input-start-time-full').value,
             stopTimeFull:document.getElementById('input-stop-time-full').value,
             
+            // 傳送 車牌 (Plate) -> 給後端 truckNum
             truckNum: plateNum, 
+            
+            // 傳送 班次 (Shift) -> 給後端 shiftNum
             shiftNum: shiftNum,
             
             concernSection:document.getElementById('input-concern-section').value,
