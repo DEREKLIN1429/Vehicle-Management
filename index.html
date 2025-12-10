@@ -161,7 +161,7 @@
     </div>
 
     <div id="app-screen">
-        <div class="author-header">Author: DEREK LIN (v5.6)</div>
+        <div class="author-header">Author: DEREK LIN (v5.7)</div>
         <div class="header">
             <div style="width: 36px;"></div> 
             <div class="header-title"><h2>Container MM INFO<br>貨櫃管理資訊</h2></div>
@@ -478,8 +478,9 @@
                 document.getElementById('input-solution').value=d.solution;
                 document.getElementById('input-self-actions').value=d.selfActions;
                 
-                document.getElementById('input-truck-num').value=d.truckNum || "";
-                document.getElementById('input-plate-num').value="";
+                // 這裡暫時回填 Plate 到 truck-num，因為後端只有一個 truckNo 欄位
+                document.getElementById('input-truck-num').value=d.truckNum || ""; // 回填班次
+                document.getElementById('input-plate-num').value=d.plateNum || ""; // 回填車牌
 
                 calculateTotalStopTime();
                 calculateTotalStock(); 
@@ -586,7 +587,6 @@
     function showStatus(t,h,s){const m=document.getElementById('status-modal');document.getElementById('status-text').innerText=h;document.getElementById('status-subtext').innerText=s;document.getElementById('status-spinner').style.display=t==='loading'?'block':'none';document.getElementById('status-icon').style.display=t!=='loading'?'block':'none';document.getElementById('status-close-btn').style.display=t!=='loading'?'block':'none';document.getElementById('status-icon').innerText=t==='success'?'✅':'❌';m.style.display='flex'}
     function closeStatusModal(){document.getElementById('status-modal').style.display='none'}
     
-    // 修改：Copy 格式調整，指定欄位分行顯示
     function copyFormattedInfo(){
         const emp = document.getElementById('input-employee-id').value || "N/A";
         const sapCode = document.getElementById('input-machine').value || "N/A";
@@ -670,17 +670,13 @@ ${notes}`;
         calculateTotalStopTime();
     }
 
+    // 修改：saveToCloud 傳送 shiftNum (班次) 與 truckNum (車牌) 給後端
     function saveToCloud(){
         if(isRecording)manualStopVoice();
         
         let noteContent = document.getElementById('input-self-actions').value;
-        const plateNum = document.getElementById('input-plate-num').value; // 車牌
-        const shiftNum = document.getElementById('input-truck-num').value; // 班次
-
-        // 將班次 (Shift) 寫入 Notes
-        if(shiftNum) {
-            noteContent = `[Truck No(Shift): ${shiftNum}]\n` + noteContent;
-        }
+        const plateNum = document.getElementById('input-plate-num').value; // 車牌 (Plate No)
+        const shiftNum = document.getElementById('input-truck-num').value; // 班次 (Shift No)
 
         const d={
             image1: processedImages[1],
@@ -691,8 +687,11 @@ ${notes}`;
             startTimeFull:document.getElementById('input-start-time-full').value,
             stopTimeFull:document.getElementById('input-stop-time-full').value,
             
-            // 將車牌號碼 (plateNum) 傳給後端的 truckNum 參數，以寫入 Excel 的 "Truck No" 欄位
+            // 傳送 車牌 (Plate) -> 給後端 truckNum
             truckNum: plateNum, 
+            
+            // 傳送 班次 (Shift) -> 給後端 shiftNum
+            shiftNum: shiftNum,
             
             concernSection:document.getElementById('input-concern-section').value,
             reason:document.getElementById('input-reason').value,
