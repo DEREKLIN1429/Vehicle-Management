@@ -168,7 +168,7 @@
     </div>
 
     <div id="app-screen">
-        <div class="author-header">Author: DEREK LIN (v6.0)</div>
+        <div class="author-header">Author: DEREK LIN (v6.1)</div>
         <div class="header">
             <div style="width: 36px;"></div> 
             <div class="header-title"><h2>Container MM INFO<br>貨櫃管理資訊</h2></div>
@@ -210,6 +210,21 @@
                     </div>
                     <input type="file" id="input-cam_2" accept="image/*" capture="environment" class="hidden" onchange="handleFile(this, 2)">
                     <input type="file" id="input-gallery_2" accept="image/*" class="hidden" onchange="handleFile(this, 2)">
+                </div>
+
+                <div class="card">
+                    <span class="section-title">Photo C (備用照片)</span>
+                    <div class="photo-controls">
+                        <button class="btn-half btn-cam" onclick="triggerFile('input-cam_3')">📷 Camera C</button>
+                        <button class="btn-half btn-gallery" onclick="triggerFile('input-gallery_3')">🖼️ Gallery C</button>
+                    </div>
+                    <div id="preview-container_3" class="preview-container-box ratio-4-3" onclick="triggerFile('input-cam_3')">
+                        <div class="ratio-tag" id="ratio-display-tag_3">Ratio: 4:3</div>
+                        <span id="placeholder_3" class="placeholder">Tap here for Photo C</span>
+                        <img id="preview-img_3" class="preview-img-display">
+                    </div>
+                    <input type="file" id="input-cam_3" accept="image/*" capture="environment" class="hidden" onchange="handleFile(this, 3)">
+                    <input type="file" id="input-gallery_3" accept="image/*" class="hidden" onchange="handleFile(this, 3)">
                 </div>
             </div>
 
@@ -325,10 +340,11 @@
     const FIXED_SCRIPT_ID = "AKfycbxX-XRuXqIB7JJopFGYaHtiAk6kZfe19bFihOd7HCxrA-ffKQGXDoIfJwwPYFLZER8c/exec"; 
     const FIXED_SHEET_ID = "1OFXZ7fb2AU0iN1I0viHmlpykA_v_JEUaSdluqtF-L_c/edit?gid=0#gid=0"; 
     const FIXED_FOLDER_ID = "1j7Z4EuAFFmdA7w46eoDxun77SD2KxsTe"; 
-     
+      
     const GAS_URL = `https://script.google.com/macros/s/${FIXED_SCRIPT_ID}/exec`;
 
-    let processedImages = { 1: "", 2: "" };
+    // 修改：初始化 3 張圖片
+    let processedImages = { 1: "", 2: "", 3: "" };
     let recognition = null, isRecording = false, activeTextAreaId = null;
     let initialText = "", currentSessionFinal = "", punctuationTimer = null; 
 
@@ -372,7 +388,8 @@
     function applySettings(){
         const r=localStorage.getItem("cfg_ratio")||'4/3';
         const ratioClass = r==='4/3'?'ratio-4-3':r==='16/9'?'ratio-16-9':r==='9/16'?'ratio-9-16':'ratio-1-1';
-        [1, 2].forEach(num => {
+        // 修改：迴圈包含 1, 2, 3
+        [1, 2, 3].forEach(num => {
             const c = document.getElementById(`preview-container_${num}`);
             if (c) {
                 c.className = 'preview-container-box'; 
@@ -467,8 +484,9 @@
         fetch(`${GAS_URL}?action=getRow&formNo=${encodeURIComponent(f)}`).then(r=>r.json()).then(res=>{
             if(res.result==='success'){
                 const d=res.data;
-                processedImages = { 1: "", 2: "" };
-                [1, 2].forEach(num => {
+                // 修改：重置 3 張圖片
+                processedImages = { 1: "", 2: "", 3: "" };
+                [1, 2, 3].forEach(num => {
                      document.getElementById(`preview-img_${num}`).style.display='none';
                      document.getElementById(`placeholder_${num}`).style.display='block';
                 });
@@ -485,9 +503,8 @@
                 document.getElementById('input-solution').value=d.solution;
                 document.getElementById('input-self-actions').value=d.selfActions;
                 
-                // 修正：回填正確的欄位
-                document.getElementById('input-truck-num').value=d.shiftNum || ""; // 回填班次
-                document.getElementById('input-plate-num').value=d.plateNum || ""; // 回填車牌
+                document.getElementById('input-truck-num').value=d.shiftNum || ""; 
+                document.getElementById('input-plate-num').value=d.plateNum || ""; 
 
                 calculateTotalStopTime();
                 calculateTotalStock(); 
@@ -594,15 +611,17 @@
     function showStatus(t,h,s){const m=document.getElementById('status-modal');document.getElementById('status-text').innerText=h;document.getElementById('status-subtext').innerText=s;document.getElementById('status-spinner').style.display=t==='loading'?'block':'none';document.getElementById('status-icon').style.display=t!=='loading'?'block':'none';document.getElementById('status-close-btn').style.display=t!=='loading'?'block':'none';document.getElementById('status-icon').innerText=t==='success'?'✅':'❌';m.style.display='flex'}
     function closeStatusModal(){document.getElementById('status-modal').style.display='none'}
     
-    // 修改：Copy 格式調整，RW Material Weight 換行顯示
     function copyFormattedInfo(){
         const emp = document.getElementById('input-employee-id').value || "N/A";
         const sapCode = document.getElementById('input-machine').value || "N/A";
         const material = document.getElementById('input-form-no').value || "N/A";
         const arrTime = document.getElementById('input-start-time-full').value || "";
         const endTime = document.getElementById('input-stop-time-full').value || "";
-        const numTruck = document.getElementById('input-truck-num').value || "N/A"; // 班次
-        const plateNum = document.getElementById('input-plate-num').value || "N/A"; // 車牌
+        
+        const totalTime = document.getElementById('input-total-time').value || "N/A";
+
+        const numTruck = document.getElementById('input-truck-num').value || "N/A"; 
+        const plateNum = document.getElementById('input-plate-num').value || "N/A"; 
         
         const inboundWeight = document.getElementById('input-concern-section').value || "N/A";
         const mxStock = document.getElementById('input-reason').value || "N/A";
@@ -630,6 +649,8 @@ ${arrTime}
 End time :
 ${endTime}
 
+Total time : ${totalTime}
+
 Truck No: ${numTruck}
 
 Number of Truck :
@@ -643,12 +664,12 @@ WH Stock: ${whStock}
 
 Tatol Stock: ${totalStock}
 
-----------------------------
+----------------------
 ID_${emp} :
 ${notes}`;
 
         navigator.clipboard.writeText(textToCopy.trim())
-            .then(() => alert("Copied!"))
+            .then(() => alert("Copied! (已複製)"))
             .catch(err => alert("Copy failed: " + err));
     }
 
@@ -669,8 +690,9 @@ ${notes}`;
         document.getElementById('input-total-stock').value="";
         document.getElementById('input-self-actions').value="";
         
-        processedImages = { 1: "", 2: "" };
-        [1, 2].forEach(num => {
+        // 修改：清除 3 張圖片
+        processedImages = { 1: "", 2: "", 3: "" };
+        [1, 2, 3].forEach(num => {
              document.getElementById(`preview-img_${num}`).style.display='none';
              document.getElementById(`preview-img_${num}`).src="";
              document.getElementById(`placeholder_${num}`).style.display='block';
@@ -683,22 +705,20 @@ ${notes}`;
         if(isRecording)manualStopVoice();
         
         let noteContent = document.getElementById('input-self-actions').value;
-        const plateNum = document.getElementById('input-plate-num').value; // 車牌
-        const shiftNum = document.getElementById('input-truck-num').value; // 班次
+        const plateNum = document.getElementById('input-plate-num').value; 
+        const shiftNum = document.getElementById('input-truck-num').value; 
 
         const d={
             image1: processedImages[1],
             image2: processedImages[2],
+            image3: processedImages[3], // 修改：傳送第三張圖片
             employeeId:document.getElementById('input-employee-id').value,
             machine:document.getElementById('input-machine').value,
             formNo:document.getElementById('input-form-no').value,
             startTimeFull:document.getElementById('input-start-time-full').value,
             stopTimeFull:document.getElementById('input-stop-time-full').value,
             
-            // 傳送 車牌 (Plate) -> 給後端 truckNum
             truckNum: plateNum, 
-            
-            // 傳送 班次 (Shift) -> 給後端 shiftNum
             shiftNum: shiftNum,
             
             concernSection:document.getElementById('input-concern-section').value,
