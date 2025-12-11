@@ -168,7 +168,7 @@
     </div>
 
     <div id="app-screen">
-        <div class="author-header">Author: DEREK LIN (v6.1)</div>
+        <div class="author-header">Author: DEREK LIN (v6.3)</div>
         <div class="header">
             <div style="width: 36px;"></div> 
             <div class="header-title"><h2>Container MM INFO<br>貨櫃管理資訊</h2></div>
@@ -183,7 +183,7 @@
             
             <div class="left-photo-column">
                 <div class="card">
-                    <span class="section-title">1. Photo A (主要照片)</span>
+                    <span class="section-title">1. 車牌號碼照片</span>
                     <div class="photo-controls">
                         <button class="btn-half btn-cam" onclick="triggerFile('input-cam_1')">📷 Camera A</button>
                         <button class="btn-half btn-gallery" onclick="triggerFile('input-gallery_1')">🖼️ Gallery A</button>
@@ -198,7 +198,7 @@
                 </div>
 
                 <div class="card">
-                    <span class="section-title">Photo B (輔助照片)</span>
+                    <span class="section-title">2. 原材料照片</span>
                     <div class="photo-controls">
                         <button class="btn-half btn-cam" onclick="triggerFile('input-cam_2')">📷 Camera B</button>
                         <button class="btn-half btn-gallery" onclick="triggerFile('input-gallery_2')">🖼️ Gallery B</button>
@@ -213,7 +213,7 @@
                 </div>
 
                 <div class="card">
-                    <span class="section-title">Photo C (備用照片)</span>
+                    <span class="section-title">3. 空櫃照片</span>
                     <div class="photo-controls">
                         <button class="btn-half btn-cam" onclick="triggerFile('input-cam_3')">📷 Camera C</button>
                         <button class="btn-half btn-gallery" onclick="triggerFile('input-gallery_3')">🖼️ Gallery C</button>
@@ -343,7 +343,6 @@
       
     const GAS_URL = `https://script.google.com/macros/s/${FIXED_SCRIPT_ID}/exec`;
 
-    // 修改：初始化 3 張圖片
     let processedImages = { 1: "", 2: "", 3: "" };
     let recognition = null, isRecording = false, activeTextAreaId = null;
     let initialText = "", currentSessionFinal = "", punctuationTimer = null; 
@@ -388,7 +387,6 @@
     function applySettings(){
         const r=localStorage.getItem("cfg_ratio")||'4/3';
         const ratioClass = r==='4/3'?'ratio-4-3':r==='16/9'?'ratio-16-9':r==='9/16'?'ratio-9-16':'ratio-1-1';
-        // 修改：迴圈包含 1, 2, 3
         [1, 2, 3].forEach(num => {
             const c = document.getElementById(`preview-container_${num}`);
             if (c) {
@@ -484,7 +482,6 @@
         fetch(`${GAS_URL}?action=getRow&formNo=${encodeURIComponent(f)}`).then(r=>r.json()).then(res=>{
             if(res.result==='success'){
                 const d=res.data;
-                // 修改：重置 3 張圖片
                 processedImages = { 1: "", 2: "", 3: "" };
                 [1, 2, 3].forEach(num => {
                      document.getElementById(`preview-img_${num}`).style.display='none';
@@ -620,14 +617,15 @@
         
         const totalTime = document.getElementById('input-total-time').value || "N/A";
 
-        const numTruck = document.getElementById('input-truck-num').value || "N/A"; 
-        const plateNum = document.getElementById('input-plate-num').value || "N/A"; 
+        // 修改：Truck No 對應 班次，Number of Truck 對應 車牌
+        const shiftNum = document.getElementById('input-truck-num').value || "N/A"; // 班次 (e.g., 1)
+        const plateNum = document.getElementById('input-plate-num').value || "N/A"; // 車牌 (e.g., GJ...)
         
         const inboundWeight = document.getElementById('input-concern-section').value || "N/A";
         const mxStock = document.getElementById('input-reason').value || "N/A";
         const whStock = document.getElementById('input-solution').value || "N/A";
         const totalStock = document.getElementById('input-total-stock').value || "N/A";
-        const notes = document.getElementById('input-self-actions').value || "N/A";
+        const notes = document.getElementById('input-self-actions').value || "";
 
         if (sapCode === "N/A" && material === "N/A") {
             alert("請至少填寫 SAP CODE 與 Material Name");
@@ -643,6 +641,7 @@ ${sapCode}
 Material Name :
 ${material}
 
+-----------------------
 Arrival Time :
 ${arrTime}
 
@@ -651,11 +650,13 @@ ${endTime}
 
 Total time : ${totalTime}
 
-Truck No: ${numTruck}
+---------------------
+Truck No: ${shiftNum}
 
-Number of Truck :
+Number of Truck : 
 ${plateNum}
 
+---------------------
 RW Material Weight:
 ${inboundWeight}
 
@@ -664,7 +665,7 @@ WH Stock: ${whStock}
 
 Tatol Stock: ${totalStock}
 
-----------------------
+--------------------
 ID_${emp} :
 ${notes}`;
 
@@ -690,7 +691,6 @@ ${notes}`;
         document.getElementById('input-total-stock').value="";
         document.getElementById('input-self-actions').value="";
         
-        // 修改：清除 3 張圖片
         processedImages = { 1: "", 2: "", 3: "" };
         [1, 2, 3].forEach(num => {
              document.getElementById(`preview-img_${num}`).style.display='none';
@@ -711,7 +711,7 @@ ${notes}`;
         const d={
             image1: processedImages[1],
             image2: processedImages[2],
-            image3: processedImages[3], // 修改：傳送第三張圖片
+            image3: processedImages[3], 
             employeeId:document.getElementById('input-employee-id').value,
             machine:document.getElementById('input-machine').value,
             formNo:document.getElementById('input-form-no').value,
