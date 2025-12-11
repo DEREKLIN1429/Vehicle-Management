@@ -168,7 +168,7 @@
     </div>
 
     <div id="app-screen">
-        <div class="author-header">Author: DEREK LIN (v6.6)</div>
+        <div class="author-header">Author: DEREK LIN (v6.7)</div>
         <div class="header">
             <div style="width: 36px;"></div> 
             <div class="header-title"><h2>Container MM INFO<br>貨櫃管理資訊</h2></div>
@@ -608,15 +608,17 @@
     function closeStatusModal(){document.getElementById('status-modal').style.display='none'}
     
     function copyFormattedInfo(){
+        // 強制計算一次，確保複製時資料是最新的
+        calculateTotalStopTime();
+        calculateTotalStock();
+
         const emp = document.getElementById('input-employee-id').value || "N/A";
         const sapCode = document.getElementById('input-machine').value || "N/A";
         const material = document.getElementById('input-form-no').value || "N/A";
-        // 修正：確保抓到正確的值
         const arrTime = document.getElementById('input-start-time-full').value || "";
         const endTime = document.getElementById('input-stop-time-full').value || "";
         const totalTime = document.getElementById('input-total-time').value || "N/A";
 
-        // Truck No 對應 班次，Number of Truck 對應 車牌
         const shiftNum = document.getElementById('input-truck-num').value || "N/A"; 
         const plateNum = document.getElementById('input-plate-num').value || "N/A"; 
         
