@@ -45,7 +45,7 @@
             display: flex; align-items: center; justify-content: center;
         }
         .header-title { flex: 1; text-align: center; } 
-        .header-title h2 { margin: 0; color: #333; font-size: 1.2rem; line-height: 1.4; }
+        .header-title h2 { margin: 0; color: #333; font-size: 1.6rem; line-height: 1.3; font-weight: 800; }
 
         .card { background: var(--card-bg); padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 12px; }
         .section-title { font-weight: bold; color: #555; margin-bottom: 8px; display: block; font-size: 1rem; }
@@ -168,14 +168,14 @@
     </div>
 
     <div id="app-screen">
-        <div class="author-header">Author: DEREK LIN (v6.3)</div>
+        <div class="author-header">Author: DEREK LIN (v6.6)</div>
         <div class="header">
             <div style="width: 36px;"></div> 
             <div class="header-title"><h2>Container MM INFO<br>貨櫃管理資訊</h2></div>
             <div class="header-btn" onclick="openSettings()" title="Settings">⚙️</div>
         </div>
         <div class="input-group">
-            <label class="input-label">Employee ID:</label>
+            <label class="input-label">Employee ID (員工編號):</label>
             <input type="text" id="input-employee-id" class="text-input" placeholder="儲存後不會清除">
         </div>
 
@@ -183,7 +183,7 @@
             
             <div class="left-photo-column">
                 <div class="card">
-                    <span class="section-title">1. 車牌號碼照片</span>
+                    <span class="section-title">1. Truck Plate Photo (車牌號碼照片)</span>
                     <div class="photo-controls">
                         <button class="btn-half btn-cam" onclick="triggerFile('input-cam_1')">📷 Camera A</button>
                         <button class="btn-half btn-gallery" onclick="triggerFile('input-gallery_1')">🖼️ Gallery A</button>
@@ -198,7 +198,7 @@
                 </div>
 
                 <div class="card">
-                    <span class="section-title">2. 原材料照片</span>
+                    <span class="section-title">2. Material Photo (原材料照片)</span>
                     <div class="photo-controls">
                         <button class="btn-half btn-cam" onclick="triggerFile('input-cam_2')">📷 Camera B</button>
                         <button class="btn-half btn-gallery" onclick="triggerFile('input-gallery_2')">🖼️ Gallery B</button>
@@ -213,7 +213,7 @@
                 </div>
 
                 <div class="card">
-                    <span class="section-title">3. 空櫃照片</span>
+                    <span class="section-title">3. Empty Container Photo (空櫃照片)</span>
                     <div class="photo-controls">
                         <button class="btn-half btn-cam" onclick="triggerFile('input-cam_3')">📷 Camera C</button>
                         <button class="btn-half btn-gallery" onclick="triggerFile('input-gallery_3')">🖼️ Gallery C</button>
@@ -233,7 +233,6 @@
                     <span class="section-title">2. Container Information</span>
                     
                     <div class="input-group">
-                        <label class="input-label" style="color: #FF5722;">🗣️ Voice Language (語音語言):</label>
                         <select id="voice-lang-select" class="text-input" onchange="syncLanguageToSettings(this)">
                             <option value="cmn-Hant-TW">Chinese (TW) - 繁體中文</option>
                             <option value="en-US">English - 英文</option>
@@ -243,17 +242,17 @@
                     </div>
 
                     <div class="input-group">
-                        <label class="input-label">SAP CODE :</label>
+                        <label class="input-label">SAP CODE (系統代碼):</label>
                         <input type="text" id="input-machine" class="text-input" placeholder="輸入 SAP Code">
                     </div>
                     
                     <div class="input-group">
-                        <label class="input-label">Material Name :</label>
+                        <label class="input-label">Material Name (材料名稱):</label>
                         <input type="text" id="input-form-no" class="text-input" placeholder="輸入材料名稱">
                     </div>
                     
                     <div class="time-component">
-                        <label class="input-label">Arrival Time : (DD/MM/YYYY hh:mm) (IST)</label>
+                        <label class="input-label">Arrival Time (到達時間): (DD/MM/YYYY hh:mm) (IST)</label>
                         <div class="time-input-row">
                             <input type="text" id="input-start-time-full" class="text-input" placeholder="請點右側按鈕或手動輸入" oninput="calculateTotalStopTime()">
                             <button type="button" class="btn-update-time" onclick="updateSingleTime('input-start-time-full')"><span style="font-size: 1.1em;">⏱️</span></button>
@@ -261,7 +260,7 @@
                     </div>
                     
                     <div class="time-component">
-                        <label class="input-label">End time : (DD/MM/YYYY hh:mm) (IST)</label>
+                        <label class="input-label">End time (結束時間): (DD/MM/YYYY hh:mm) (IST)</label>
                         <div class="time-input-row">
                             <input type="text" id="input-stop-time-full" class="text-input" placeholder="請點右側按鈕或手動輸入" oninput="calculateTotalStopTime()">
                             <button type="button" class="btn-update-time" onclick="updateSingleTime('input-stop-time-full')"><span style="font-size: 1.1em;">⏱️</span></button>
@@ -269,7 +268,7 @@
                     </div>
                     
                     <div class="input-group">
-                        <label class="input-label">Total time :</label>
+                        <label class="input-label">Total time (總時間):</label>
                         <div class="total-time-input-group">
                             <input type="text" id="input-total-time" class="text-input" readonly style="background-color: #eee; font-weight: bold;">
                             <button type="button" class="btn-calc" onclick="calculateTotalStopTime()" title="Recalculate">🔄</button>
@@ -278,37 +277,37 @@
                     </div>
 
                     <div class="input-group">
-                        <label class="input-label">Truck No (班次) :</label>
+                        <label class="input-label">Truck No (班次):</label>
                         <input type="text" id="input-truck-num" class="text-input" placeholder="輸入班次 (e.g. 1)">
                     </div>
 
                     <div class="input-group">
-                        <label class="input-label">Number of Truck (車牌) :</label>
+                        <label class="input-label">Number of Truck (車牌):</label>
                         <input type="text" id="input-plate-num" class="text-input" placeholder="輸入車牌號碼">
                     </div>
 
                     <div class="input-group">
-                        <label class="input-label">RW Material Weight :</label>
+                        <label class="input-label">RW Material Weight (原材料重量):</label>
                         <input type="number" id="input-concern-section" class="text-input" placeholder="Enter Weight" oninput="calculateTotalStock()">
                     </div>
                     
                     <div class="input-group">
-                        <label class="input-label">MX Stock :</label>
+                        <label class="input-label">MX Stock (MX 庫存):</label>
                         <input type="number" id="input-reason" class="text-input" placeholder="Enter MX Stock" oninput="calculateTotalStock()">
                     </div>
                     
                     <div class="input-group">
-                        <label class="input-label">WH Stock :</label>
+                        <label class="input-label">WH Stock (WH 庫存):</label>
                         <input type="number" id="input-solution" class="text-input" placeholder="Enter WH Stock" oninput="calculateTotalStock()">
                     </div>
 
                     <div class="input-group">
-                        <label class="input-label">Tatol Stock :</label>
+                        <label class="input-label">Total Stock (總庫存):</label>
                         <input type="text" id="input-total-stock" class="text-input" readonly style="background-color: #eee; font-weight: bold;" placeholder="Auto Calc">
                     </div>
 
                     <div class="input-group">
-                        <label class="input-label">Notes :</label>
+                        <label class="input-label">Notes (備註):</label>
                         <textarea id="input-self-actions"></textarea>
                         <div class="voice-control-group"><button type="button" class="btn-voice" data-target="input-self-actions" onclick="toggleVoice(this)">🎤 語音輸入</button></div>
                     </div>
@@ -612,14 +611,14 @@
         const emp = document.getElementById('input-employee-id').value || "N/A";
         const sapCode = document.getElementById('input-machine').value || "N/A";
         const material = document.getElementById('input-form-no').value || "N/A";
+        // 修正：確保抓到正確的值
         const arrTime = document.getElementById('input-start-time-full').value || "";
         const endTime = document.getElementById('input-stop-time-full').value || "";
-        
         const totalTime = document.getElementById('input-total-time').value || "N/A";
 
-        // 修改：Truck No 對應 班次，Number of Truck 對應 車牌
-        const shiftNum = document.getElementById('input-truck-num').value || "N/A"; // 班次 (e.g., 1)
-        const plateNum = document.getElementById('input-plate-num').value || "N/A"; // 車牌 (e.g., GJ...)
+        // Truck No 對應 班次，Number of Truck 對應 車牌
+        const shiftNum = document.getElementById('input-truck-num').value || "N/A"; 
+        const plateNum = document.getElementById('input-plate-num').value || "N/A"; 
         
         const inboundWeight = document.getElementById('input-concern-section').value || "N/A";
         const mxStock = document.getElementById('input-reason').value || "N/A";
@@ -663,7 +662,7 @@ ${inboundWeight}
 MX Stock: ${mxStock}
 WH Stock: ${whStock}
 
-Tatol Stock: ${totalStock}
+Total Stock: ${totalStock}
 
 --------------------
 ID_${emp} :
