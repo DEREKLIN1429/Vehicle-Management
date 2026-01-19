@@ -337,7 +337,7 @@
 
     // ⚠️⚠️⚠️ 請務必將下方三個 ID 替換為您自己的資料 ⚠️⚠️⚠️
     // 1. 部署 Apps Script 獲得的網址 (Web App URL)
-    const FIXED_SCRIPT_ID = "請將_Apps_Script_網址_貼在這裡"; 
+    const FIXED_SCRIPT_ID = "https://script.google.com/macros/s/AKfycbxX-XRuXqIB7JJopFGYaHtiAk6kZfe19bFihOd7HCxrA-ffKQGXDoIfJwwPYFLZER8c/exec"; 
     // 2. Google Sheet 的 ID (網址 /d/ 後面那串)
     const FIXED_SHEET_ID = "1OFXZ7fb2AU0iN1I0viHmlpykA_v_JEUaSdluqtF-L_c/edit?gid=0#gid=0"; 
     // 3. Google Drive 資料夾 ID
@@ -473,6 +473,8 @@
                 const recordsToShow = res.data.slice(0, limit);
                 recordsToShow.forEach(r=>{
                     const i=document.createElement('div');i.className='record-item';i.setAttribute('onclick',`populateForm('${r.formNo}')`);
+                    // 顯示： 單號 - 結束時間 (若有)
+                    // 詳情： SAP Code - 車牌號碼 (Truck No from backend)
                     i.innerHTML=`<div class="main-info-group"><span class="form-no-display">#${r.formNo||'N/A'}</span><span class="stop-time-display">🛑 ${r.stopTime||"No Time"}</span></div><div class="details"><div>${r.machine||'N/A'} - ${r.truckNum||'No Plate'}</div><div>${r.startTime?'Arr: '+r.startTime:''}</div></div>`;
                     listContainer.appendChild(i)
                 })
