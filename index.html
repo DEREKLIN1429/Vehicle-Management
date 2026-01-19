@@ -468,7 +468,11 @@
             if(res.result==='success'&&res.data.length>0){
                 const recordsToShow = res.data.slice(0, limit);
                 recordsToShow.forEach(r=>{
-                    const i=document.createElement('div');i.className='record-item';i.setAttribute('onclick',`populateForm('${r.formNo}')`);
+                    const i=document.createElement('div');i.className='record-item';
+                    
+                    // ⭐ 使用 formNo + startTime 作為唯一識別
+                    i.setAttribute('onclick', `populateForm('${r.formNo}', '${r.startTime}')`);
+                    
                     i.innerHTML=`<div class="main-info-group"><span class="form-no-display">#${r.formNo||'N/A'}</span><span class="stop-time-display">🛑 ${r.stopTime||"No Time"}</span></div><div class="details"><div>${r.machine||'N/A'} - ${r.truckNum||'No Plate'}</div><div>${r.startTime?'Arr: '+r.startTime:''}</div></div>`;
                     listContainer.appendChild(i)
                 })
@@ -476,9 +480,11 @@
         }).catch(e=>{listContainer.innerHTML='<p style="text-align: center; color: red;">❌ 載入失敗。</p>'})
     }
 
-    function populateForm(f){
+    function populateForm(f, t){
         if(!confirm(`回填單號 [${f}]?`))return;showStatus('loading','Loading...',f);
-        fetch(`${GAS_URL}?action=getRow&formNo=${encodeURIComponent(f)}`).then(r=>r.json()).then(res=>{
+        
+        // ⭐ 傳送 startTime 參數
+        fetch(`${GAS_URL}?action=getRow&formNo=${encodeURIComponent(f)}&startTime=${encodeURIComponent(t||'')}`).then(r=>r.json()).then(res=>{
             if(res.result==='success'){
                 const d=res.data;
                 processedImages = { 1: "", 2: "", 3: "" };
@@ -499,10 +505,7 @@
                 document.getElementById('input-solution').value=d.solution;
                 document.getElementById('input-self-actions').value=d.selfActions;
                 
-                // ⭐ 修正點：資料回填
-                // 1. 車牌(I欄) -> Number of Truck (input-plate-num)
                 document.getElementById('input-plate-num').value = d.plateNum || ""; 
-                // 2. 班次(J欄) -> Truck No (input-truck-num)
                 document.getElementById('input-truck-num').value = d.shiftNum || ""; 
 
                 calculateTotalStopTime();
@@ -721,11 +724,8 @@ ${notes}`;
             startTimeFull:document.getElementById('input-start-time-full').value,
             stopTimeFull:document.getElementById('input-stop-time-full').value,
             
-            // ⭐ 寫入資料：
-            // 前端 truckNum (key) -> 寫入到 Plate (I欄)
-            truckNum: plateNum, 
-            // 前端 shiftNum (key) -> 寫入到 Shift (J欄)
-            shiftNum: shiftNum, 
+            truckNum: plateNum, // 對應 I欄
+            shiftNum: shiftNum, // 對應 J欄
             
             concernSection:document.getElementById('input-concern-section').value,
             reason:document.getElementById('input-reason').value,
