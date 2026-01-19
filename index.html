@@ -499,9 +499,11 @@
                 document.getElementById('input-solution').value=d.solution;
                 document.getElementById('input-self-actions').value=d.selfActions;
                 
-                // ⭐ 修正點：正確填入班次與車牌
-                document.getElementById('input-truck-num').value = d.shiftNum || ""; // 填入班次
-                document.getElementById('input-plate-num').value = d.plateNum || ""; // 填入車牌
+                // ⭐ 修正點：資料回填
+                // 1. 車牌(I欄) -> Number of Truck (input-plate-num)
+                document.getElementById('input-plate-num').value = d.plateNum || ""; 
+                // 2. 班次(J欄) -> Truck No (input-truck-num)
+                document.getElementById('input-truck-num').value = d.shiftNum || ""; 
 
                 calculateTotalStopTime();
                 calculateTotalStock(); 
@@ -719,9 +721,11 @@ ${notes}`;
             startTimeFull:document.getElementById('input-start-time-full').value,
             stopTimeFull:document.getElementById('input-stop-time-full').value,
             
-            // ⭐ 這裡對應後端的變數名稱
-            truckNum: plateNum, // 後端將 truckNum 存入 I欄 (車牌)
-            shiftNum: shiftNum, // 後端將 shiftNum 存入 J欄 (班次)
+            // ⭐ 寫入資料：
+            // 前端 truckNum (key) -> 寫入到 Plate (I欄)
+            truckNum: plateNum, 
+            // 前端 shiftNum (key) -> 寫入到 Shift (J欄)
+            shiftNum: shiftNum, 
             
             concernSection:document.getElementById('input-concern-section').value,
             reason:document.getElementById('input-reason').value,
@@ -737,4 +741,3 @@ ${notes}`;
 </script>
 </body>
 </html>
-
