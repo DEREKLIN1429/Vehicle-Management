@@ -336,14 +336,10 @@
     const DEFAULT_RECENT_LIMIT = 5;
 
     // ⚠️⚠️⚠️ 請務必將下方三個 ID 替換為您自己的資料 ⚠️⚠️⚠️
-    // 1. 部署 Apps Script 獲得的網址 (Web App URL)
-    const FIXED_SCRIPT_ID = "https://script.google.com/macros/s/AKfycbxX-XRuXqIB7JJopFGYaHtiAk6kZfe19bFihOd7HCxrA-ffKQGXDoIfJwwPYFLZER8c/exec"; 
-    // 2. Google Sheet 的 ID (網址 /d/ 後面那串)
+    const FIXED_SCRIPT_ID = "請將_Apps_Script_網址_貼在這裡"; 
     const FIXED_SHEET_ID = "1OFXZ7fb2AU0iN1I0viHmlpykA_v_JEUaSdluqtF-L_c/edit?gid=0#gid=0"; 
-    // 3. Google Drive 資料夾 ID
     const FIXED_FOLDER_ID = "1j7Z4EuAFFmdA7w46eoDxun77SD2KxsTe"; 
       
-    // 自動判斷：如果使用者填的是 ID，就組合成網址；如果填的是網址，就直接用
     const GAS_URL = FIXED_SCRIPT_ID.startsWith("http") ? FIXED_SCRIPT_ID : `https://script.google.com/macros/s/${FIXED_SCRIPT_ID}/exec`;
 
     let processedImages = { 1: "", 2: "", 3: "" };
@@ -473,8 +469,6 @@
                 const recordsToShow = res.data.slice(0, limit);
                 recordsToShow.forEach(r=>{
                     const i=document.createElement('div');i.className='record-item';i.setAttribute('onclick',`populateForm('${r.formNo}')`);
-                    // 顯示： 單號 - 結束時間 (若有)
-                    // 詳情： SAP Code - 車牌號碼 (Truck No from backend)
                     i.innerHTML=`<div class="main-info-group"><span class="form-no-display">#${r.formNo||'N/A'}</span><span class="stop-time-display">🛑 ${r.stopTime||"No Time"}</span></div><div class="details"><div>${r.machine||'N/A'} - ${r.truckNum||'No Plate'}</div><div>${r.startTime?'Arr: '+r.startTime:''}</div></div>`;
                     listContainer.appendChild(i)
                 })
@@ -505,9 +499,9 @@
                 document.getElementById('input-solution').value=d.solution;
                 document.getElementById('input-self-actions').value=d.selfActions;
                 
-                // 後端回傳: shiftNum=班次, plateNum=車牌
-                document.getElementById('input-truck-num').value=d.shiftNum || ""; 
-                document.getElementById('input-plate-num').value=d.plateNum || ""; 
+                // ⭐ 修正點：正確填入班次與車牌
+                document.getElementById('input-truck-num').value = d.shiftNum || ""; // 填入班次
+                document.getElementById('input-plate-num').value = d.plateNum || ""; // 填入車牌
 
                 calculateTotalStopTime();
                 calculateTotalStock(); 
@@ -615,7 +609,6 @@
     function closeStatusModal(){document.getElementById('status-modal').style.display='none'}
     
     function copyFormattedInfo(){
-        // 強制計算一次，確保複製時資料是最新的
         calculateTotalStopTime();
         calculateTotalStock();
 
@@ -726,8 +719,9 @@ ${notes}`;
             startTimeFull:document.getElementById('input-start-time-full').value,
             stopTimeFull:document.getElementById('input-stop-time-full').value,
             
-            truckNum: plateNum, // 後端對應為 TRUCK_NO (車牌)
-            shiftNum: shiftNum, // 後端對應為 SHIFT_NO (班次)
+            // ⭐ 這裡對應後端的變數名稱
+            truckNum: plateNum, // 後端將 truckNum 存入 I欄 (車牌)
+            shiftNum: shiftNum, // 後端將 shiftNum 存入 J欄 (班次)
             
             concernSection:document.getElementById('input-concern-section').value,
             reason:document.getElementById('input-reason').value,
