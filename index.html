@@ -335,12 +335,16 @@
     const DEFAULT_VOICE_TIMEOUT = 1.5;
     const DEFAULT_RECENT_LIMIT = 5;
 
-    // TODO: ⚠️ 請務必將下方三個 ID 替換為您自己的資料 ⚠️
-    const FIXED_SCRIPT_ID = "AKfycbxX-XRuXqIB7JJopFGYaHtiAk6kZfe19bFihOd7HCxrA-ffKQGXDoIfJwwPYFLZER8c/exec"; 
+    // ⚠️⚠️⚠️ 請務必將下方三個 ID 替換為您自己的資料 ⚠️⚠️⚠️
+    // 1. 部署 Apps Script 獲得的網址 (Web App URL)
+    const FIXED_SCRIPT_ID = "請將_Apps_Script_網址_貼在這裡"; 
+    // 2. Google Sheet 的 ID (網址 /d/ 後面那串)
     const FIXED_SHEET_ID = "1OFXZ7fb2AU0iN1I0viHmlpykA_v_JEUaSdluqtF-L_c/edit?gid=0#gid=0"; 
+    // 3. Google Drive 資料夾 ID
     const FIXED_FOLDER_ID = "1j7Z4EuAFFmdA7w46eoDxun77SD2KxsTe"; 
       
-    const GAS_URL = `https://script.google.com/macros/s/${FIXED_SCRIPT_ID}/exec`;
+    // 自動判斷：如果使用者填的是 ID，就組合成網址；如果填的是網址，就直接用
+    const GAS_URL = FIXED_SCRIPT_ID.startsWith("http") ? FIXED_SCRIPT_ID : `https://script.google.com/macros/s/${FIXED_SCRIPT_ID}/exec`;
 
     let processedImages = { 1: "", 2: "", 3: "" };
     let recognition = null, isRecording = false, activeTextAreaId = null;
@@ -483,8 +487,8 @@
                 const d=res.data;
                 processedImages = { 1: "", 2: "", 3: "" };
                 [1, 2, 3].forEach(num => {
-                     document.getElementById(`preview-img_${num}`).style.display='none';
-                     document.getElementById(`placeholder_${num}`).style.display='block';
+                      document.getElementById(`preview-img_${num}`).style.display='none';
+                      document.getElementById(`placeholder_${num}`).style.display='block';
                 });
 
                 document.getElementById('input-employee-id').value=d.employeeId;
@@ -499,6 +503,7 @@
                 document.getElementById('input-solution').value=d.solution;
                 document.getElementById('input-self-actions').value=d.selfActions;
                 
+                // 後端回傳: shiftNum=班次, plateNum=車牌
                 document.getElementById('input-truck-num').value=d.shiftNum || ""; 
                 document.getElementById('input-plate-num').value=d.plateNum || ""; 
 
@@ -719,8 +724,8 @@ ${notes}`;
             startTimeFull:document.getElementById('input-start-time-full').value,
             stopTimeFull:document.getElementById('input-stop-time-full').value,
             
-            truckNum: plateNum, 
-            shiftNum: shiftNum,
+            truckNum: plateNum, // 後端對應為 TRUCK_NO (車牌)
+            shiftNum: shiftNum, // 後端對應為 SHIFT_NO (班次)
             
             concernSection:document.getElementById('input-concern-section').value,
             reason:document.getElementById('input-reason').value,
